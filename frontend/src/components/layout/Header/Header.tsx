@@ -1,236 +1,477 @@
-import { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { RootState } from '@store/index';
-import { setSearchQuery, toggleMobileMenu, toggleSearch } from '@store/slices/uiSlice';
 import { useAuth } from '@hooks/useAuth';
 import { useCart } from '@hooks/useCart';
-import { useDebounce } from '@hooks/useDebounce';
+import { FaSearch, FaTimes, FaMapMarkerAlt, FaShoppingCart, FaUser, FaHeart, FaBox, FaChevronDown, FaBars, FaSignOutAlt, FaCrown, FaClock, FaList } from 'react-icons/fa';
 
-/**
- * Header Component
- * Main navigation header with search, cart, and user menu
- */
 const Header: React.FC = () => {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, logout } = useAuth();
   const { itemCount } = useCart();
-  const { searchQuery, searchOpen } = useSelector((state: RootState) => state.ui);
-  
-  const [localSearch, setLocalSearch] = useState('');
-  const [showUserMenu, setShowUserMenu] = useState(false);
+  const { searchQuery } = useSelector((state: RootState) => state.ui);
+
+  // Search State
+  const [searchText, setSearchText] = useState('');
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const debouncedSearch = useDebounce(localSearch, 300);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
+
+  // Dropdown States
+  const [showAccountDropdown, setShowAccountDropdown] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
+
+  // Mock suggestions
+  const suggestions = searchText.length >= 2 ? [
+    `${searchText} headphones`,
+    `${searchText} wireless`,
+    `${searchText} bluetooth`,
+    `${searchText} for men`,
+    `${searchText} 2024`,
+  ] : [];
 
   // Handle search
-  useEffect(() => {
-    dispatch(setSearchQuery(debouncedSearch));
-  }, [debouncedSearch, dispatch]);
-
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (localSearch.trim()) {
-      navigate(`/search?q=${encodeURIComponent(localSearch.trim())}`);
-      dispatch(toggleSearch());
+    if (searchText.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchText.trim())}`);
+      setSearchText('');
+      setShowSuggestions(false);
+      searchInputRef.current?.blur();
     }
   };
 
-  // Close user menu when clicking outside
+  // Handle suggestion click
+  const handleSuggestionClick = (suggestion: string) => {
+    navigate(`/search?q=${encodeURIComponent(suggestion)}`);
+    setSearchText('');
+    setShowSuggestions(false);
+  };
+
+  // Close dropdowns on outside click
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
-      if (!target.closest('.user-menu')) {
-        setShowUserMenu(false);
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.account-dropdown')) setShowAccountDropdown(false);
+      if (!target.closest('.search-container')) setShowSuggestions(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Keyboard shortcut for search
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.key === '/' && document.activeElement !== searchInputRef.current) {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+      if (e.key === 'Escape') {
+        searchInputRef.current?.blur();
+        setShowSuggestions(false);
       }
     };
-
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
+    document.addEventListener('keydown', handleKeyPress);
+    return () => document.removeEventListener('keydown', handleKeyPress);
   }, []);
 
   return (
-    <header className="bg-amazon-navy text-white sticky top-0 z-50">
-      {/* Main Header */}
-      <div className="flex items-center px-4 py-2 gap-4 max-w-amazon mx-auto">
-        {/* Logo */}
-        <Link to="/" className="flex-shrink-0 py-2 px-2 hover:border hover:border-white rounded-sm">
-          <span className="text-2xl font-bold text-white">amazon</span>
-          <span className="text-xs text-amazon-orange block -mt-1">clone</span>
-        </Link>
-
-        {/* Delivery Location */}
-        <button className="hidden lg:flex items-center px-2 py-2 hover:border hover:border-white rounded-sm">
-          <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-          </svg>
-          <div className="text-left">
-            <div className="text-xs text-gray-300">Deliver to</div>
-            <div className="text-sm font-bold">Select Location</div>
+    <>
+      {/* ========== TOP STRIP ========== */}
+      <div className="bg-amazon-dark-gray text-white text-xs">
+        <div className="max-w-amazon mx-auto flex items-center justify-between px-4 py-1.5">
+          <div className="flex items-center gap-4">
+            <span className="hover:text-amazon-orange cursor-pointer transition-colors">🇺🇸 English</span>
+            <span className="hover:text-amazon-orange cursor-pointer transition-colors">📍 Deliver to Pakistan</span>
           </div>
-        </button>
+          <div className="hidden md:flex items-center gap-4">
+            <Link to="/orders" className="hover:text-amazon-orange transition-colors">Returns & Orders</Link>
+            <Link to="/help" className="hover:text-amazon-orange transition-colors">Customer Service</Link>
+            <Link to="/deals" className="hover:text-amazon-orange transition-colors font-medium">🔥 Today's Deals</Link>
+          </div>
+        </div>
+      </div>
 
-        {/* Search Bar */}
-        <form onSubmit={handleSearch} className="flex-1 flex">
-          <div className="flex flex-1">
-            <input
-              ref={searchInputRef}
-              type="text"
-              value={localSearch}
-              onChange={(e) => setLocalSearch(e.target.value)}
-              placeholder="Search Amazon..."
-              className="w-full px-4 py-2 text-gray-900 rounded-l-md focus:outline-none focus:ring-2 focus:ring-amazon-orange"
-            />
-            <button
-              type="submit"
-              className="bg-amazon-orange hover:bg-amazon-orange-dark px-6 rounded-r-md transition-colors"
+      {/* ========== MAIN HEADER ========== */}
+      <header className="bg-amazon-navy text-white sticky top-0 z-50 shadow-lg">
+        <div className="max-w-amazon mx-auto px-4 py-2.5">
+          <div className="flex items-center gap-3">
+            
+            {/* ===== MOBILE MENU BUTTON ===== */}
+            <button 
+              className="lg:hidden p-2 hover:border hover:border-white rounded-sm transition-all"
+              onClick={() => setShowMobileMenu(!showMobileMenu)}
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
+              <FaBars size={20} />
             </button>
-          </div>
-        </form>
 
-        {/* Language */}
-        <button className="hidden lg:flex items-center px-2 py-2 hover:border hover:border-white rounded-sm">
-          <span className="text-sm font-bold">EN</span>
-        </button>
+            {/* ===== LOGO ===== */}
+            <Link 
+              to="/" 
+              className="flex-shrink-0 group px-2 py-1.5 hover:border hover:border-white rounded-sm transition-all"
+              onClick={() => window.scrollTo(0, 0)}
+            >
+              <span className="text-2xl md:text-3xl font-extrabold tracking-tight">
+                <span className="text-white">ama</span>
+                <span className="text-amazon-orange">zon</span>
+              </span>
+              <span className="hidden md:block text-[10px] text-amazon-orange -mt-0.5 leading-none">
+                clone
+              </span>
+            </Link>
 
-        {/* Account */}
-        <div className="relative user-menu">
-          <button
-            onClick={() => setShowUserMenu(!showUserMenu)}
-            className="hidden lg:flex flex-col px-2 py-2 hover:border hover:border-white rounded-sm"
-          >
-            <span className="text-xs">
-              {isAuthenticated ? `Hello, ${user?.firstName}` : 'Hello, Sign in'}
-            </span>
-            <span className="text-sm font-bold">Account & Lists</span>
-          </button>
+            {/* ===== DELIVERY LOCATION ===== */}
+            <button className="hidden xl:flex items-center gap-1 px-2 py-1.5 hover:border hover:border-white rounded-sm transition-all group">
+              <FaMapMarkerAlt className="text-amazon-orange group-hover:scale-110 transition-transform" size={18} />
+              <div className="text-left leading-tight">
+                <div className="text-xs text-gray-300">Deliver to</div>
+                <div className="text-sm font-bold -mt-0.5">Select Location</div>
+              </div>
+            </button>
 
-          {/* User Dropdown */}
-          {showUserMenu && (
-            <div className="absolute right-0 mt-2 w-64 bg-white text-gray-900 rounded-lg shadow-xl border animate-fade-in">
-              {isAuthenticated ? (
-                <div className="p-4">
-                  <Link
-                    to="/account"
-                    className="block px-4 py-2 hover:bg-gray-100 rounded"
-                    onClick={() => setShowUserMenu(false)}
-                  >
-                    Your Account
-                  </Link>
-                  <Link
-                    to="/orders"
-                    className="block px-4 py-2 hover:bg-gray-100 rounded"
-                    onClick={() => setShowUserMenu(false)}
-                  >
-                    Your Orders
-                  </Link>
-                  <Link
-                    to="/wishlist"
-                    className="block px-4 py-2 hover:bg-gray-100 rounded"
-                    onClick={() => setShowUserMenu(false)}
-                  >
-                    Your Wishlist
-                  </Link>
-                  <hr className="my-2" />
+            {/* ===== SEARCH BAR ===== */}
+            <div className="flex-1 max-w-3xl mx-auto search-container">
+              <form onSubmit={handleSearch}>
+                <div className={`
+                  flex items-center transition-all duration-300
+                  ${isSearchFocused ? 'ring-4 ring-amazon-orange/30 rounded-lg' : 'rounded-lg'}
+                `}>
+                  {/* Category Dropdown */}
+                  <div className="hidden md:block relative">
+                    <select className="h-[42px] px-3 text-xs bg-gray-100 hover:bg-gray-200 
+                                     border border-gray-300 rounded-l-lg border-r-0
+                                     text-gray-700 cursor-pointer font-medium
+                                     focus:outline-none appearance-none pr-7 transition-colors">
+                      <option>All</option>
+                      <option>Electronics</option>
+                      <option>Fashion</option>
+                      <option>Books</option>
+                      <option>Home</option>
+                      <option>Sports</option>
+                    </select>
+                    <FaChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" size={10} />
+                  </div>
+
+                  {/* Input */}
+                  <div className="relative flex-1">
+                    <input
+                      ref={searchInputRef}
+                      type="text"
+                      value={searchText}
+                      onChange={(e) => {
+                        setSearchText(e.target.value);
+                        setShowSuggestions(true);
+                      }}
+                      onFocus={() => {
+                        setIsSearchFocused(true);
+                        if (searchText.length >= 2) setShowSuggestions(true);
+                      }}
+                      onBlur={() => setIsSearchFocused(false)}
+                      placeholder="Search Amazon..."
+                      className="w-full h-[42px] px-4 text-sm
+                               border border-gray-300 md:rounded-none md:border-l-0 rounded-l-lg
+                               text-gray-900 placeholder-gray-500
+                               focus:outline-none transition-all"
+                    />
+                    
+                    {/* Clear Button */}
+                    {searchText && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSearchText('');
+                          searchInputRef.current?.focus();
+                        }}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 
+                                 p-1.5 text-gray-400 hover:text-gray-600 
+                                 rounded-full hover:bg-gray-200 transition-all"
+                      >
+                        <FaTimes size={14} />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Search Button */}
                   <button
-                    onClick={() => {
-                      useAuth().logout();
-                      setShowUserMenu(false);
-                    }}
-                    className="block w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100 rounded"
+                    type="submit"
+                    className="h-[42px] px-5 bg-amazon-orange hover:bg-amazon-orange-dark
+                             text-white rounded-r-lg transition-all duration-200
+                             hover:shadow-lg active:scale-95
+                             flex items-center gap-1.5 font-medium"
                   >
-                    Sign Out
+                    <FaSearch size={18} />
+                    <span className="hidden sm:inline text-sm">Search</span>
                   </button>
                 </div>
-              ) : (
-                <div className="p-4">
-                  <Link
-                    to="/login"
-                    className="block w-full text-center bg-amazon-yellow hover:bg-amazon-yellow-dark 
-                             text-gray-900 font-medium py-2 rounded-full mb-2"
-                    onClick={() => setShowUserMenu(false)}
-                  >
-                    Sign In
-                  </Link>
-                  <p className="text-sm text-center">
-                    New customer?{' '}
-                    <Link
-                      to="/register"
-                      className="text-amazon-blue hover:underline"
-                      onClick={() => setShowUserMenu(false)}
+              </form>
+
+              {/* Search Suggestions Dropdown */}
+              {showSuggestions && searchText.length >= 2 && (
+                <div 
+                  ref={suggestionsRef}
+                  className="absolute mt-1 w-full max-w-3xl bg-white border border-gray-200 
+                           rounded-lg shadow-2xl z-50 overflow-hidden animate-fade-in"
+                >
+                  {suggestions.map((suggestion, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleSuggestionClick(suggestion)}
+                      className="w-full text-left px-4 py-2.5 text-sm text-gray-700 
+                               hover:bg-gray-50 flex items-center gap-3 border-b 
+                               border-gray-100 last:border-0 transition-colors
+                               search-suggestion group"
                     >
-                      Start here.
-                    </Link>
-                  </p>
+                      <FaSearch className="text-gray-400 group-hover:text-amazon-orange transition-colors" size={12} />
+                      <span>{suggestion}</span>
+                    </button>
+                  ))}
+                  <div className="px-4 py-2 bg-gray-50 text-xs text-gray-500 text-right">
+                    Press <kbd className="px-1 py-0.5 bg-gray-200 rounded text-xs font-mono">ESC</kbd> to close
+                  </div>
                 </div>
               )}
             </div>
-          )}
+
+            {/* ===== RIGHT SIDE ACTIONS ===== */}
+            <div className="flex items-center gap-1 flex-shrink-0">
+              
+              {/* Language */}
+              <button className="hidden lg:flex items-center px-2 py-1.5 hover:border hover:border-white rounded-sm transition-all">
+                <span className="text-sm font-bold">EN</span>
+                <FaChevronDown size={8} className="ml-0.5 text-gray-400" />
+              </button>
+
+              {/* Account Dropdown */}
+              <div className="relative account-dropdown">
+                <button
+                  onClick={() => setShowAccountDropdown(!showAccountDropdown)}
+                  className="flex flex-col px-2 py-1.5 hover:border hover:border-white rounded-sm transition-all"
+                >
+                  <span className="text-xs text-gray-300 leading-none">
+                    {isAuthenticated ? `Hello, ${user?.firstName}` : 'Hello, sign in'}
+                  </span>
+                  <span className="text-sm font-bold leading-tight flex items-center gap-0.5">
+                    Account & Lists
+                    <FaChevronDown size={8} className="text-gray-400" />
+                  </span>
+                </button>
+
+                {/* Dropdown Menu */}
+                {showAccountDropdown && (
+                  <div className="absolute right-0 top-full mt-1 w-72 bg-white text-gray-900 
+                                rounded-lg shadow-2xl border z-50 animate-fade-in overflow-hidden">
+                    {isAuthenticated ? (
+                      <>
+                        <div className="p-4 bg-gray-50 border-b">
+                          <p className="font-semibold">{user?.firstName} {user?.lastName}</p>
+                          <p className="text-xs text-gray-500">{user?.email}</p>
+                        </div>
+                        <div className="p-2">
+                          <Link to="/account" className="flex items-center gap-3 px-3 py-2 hover:bg-gray-100 rounded text-sm transition-colors"
+                            onClick={() => setShowAccountDropdown(false)}>
+                            <FaUser className="text-gray-400" /> Your Account
+                          </Link>
+                          <Link to="/orders" className="flex items-center gap-3 px-3 py-2 hover:bg-gray-100 rounded text-sm transition-colors"
+                            onClick={() => setShowAccountDropdown(false)}>
+                            <FaBox className="text-gray-400" /> Your Orders
+                          </Link>
+                          <Link to="/wishlist" className="flex items-center gap-3 px-3 py-2 hover:bg-gray-100 rounded text-sm transition-colors"
+                            onClick={() => setShowAccountDropdown(false)}>
+                            <FaHeart className="text-gray-400" /> Wishlist
+                          </Link>
+                          <Link to="/orders" className="flex items-center gap-3 px-3 py-2 hover:bg-gray-100 rounded text-sm transition-colors"
+                            onClick={() => setShowAccountDropdown(false)}>
+                            <FaClock className="text-gray-400" /> Browsing History
+                          </Link>
+                          <hr className="my-2" />
+                          <button
+                            onClick={() => { logout(); setShowAccountDropdown(false); }}
+                            className="w-full flex items-center gap-3 px-3 py-2 hover:bg-red-50 rounded text-sm text-red-600 transition-colors"
+                          >
+                            <FaSignOutAlt /> Sign Out
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="p-4">
+                        <button
+                          onClick={() => { navigate('/login'); setShowAccountDropdown(false); }}
+                          className="w-full bg-amazon-yellow hover:bg-amazon-yellow-dark text-gray-900 
+                                   font-medium py-2 px-6 rounded-full transition-colors text-sm"
+                        >
+                          Sign In
+                        </button>
+                        <p className="text-xs text-center mt-3 text-gray-600">
+                          New customer?{' '}
+                          <Link to="/register" onClick={() => setShowAccountDropdown(false)} 
+                                className="text-amazon-blue hover:underline">
+                            Start here.
+                          </Link>
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Returns & Orders */}
+              <Link to="/orders" className="hidden md:flex flex-col px-2 py-1.5 hover:border hover:border-white rounded-sm transition-all">
+                <span className="text-xs text-gray-300 leading-none">Returns</span>
+                <span className="text-sm font-bold leading-tight">& Orders</span>
+              </Link>
+
+              {/* Cart */}
+              <Link to="/cart" className="flex items-center px-2 py-1.5 hover:border hover:border-white rounded-sm transition-all relative">
+                <div className="relative">
+                  <FaShoppingCart size={28} className="text-white" />
+                  {itemCount > 0 && (
+                    <span className="absolute -top-2 -right-3 bg-amazon-orange text-white 
+                                   text-xs font-bold rounded-full min-w-[20px] h-5 
+                                   flex items-center justify-center px-1
+                                   animate-bounce-slow shadow-md">
+                      {itemCount > 99 ? '99+' : itemCount}
+                    </span>
+                  )}
+                </div>
+                <span className="hidden md:block text-sm font-bold mt-2 ml-0.5">Cart</span>
+              </Link>
+            </div>
+          </div>
         </div>
 
-        {/* Returns & Orders */}
-        <Link
-          to="/orders"
-          className="hidden lg:flex flex-col px-2 py-2 hover:border hover:border-white rounded-sm"
-        >
-          <span className="text-xs">Returns</span>
-          <span className="text-sm font-bold">& Orders</span>
-        </Link>
+        {/* ===== SUB NAVIGATION ===== */}
+        <nav className="bg-amazon-dark-gray text-white border-t border-gray-700">
+          <div className="max-w-amazon mx-auto px-4">
+            <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide">
+              
+              <button className="flex items-center gap-1.5 px-3 py-2 hover:border hover:border-white 
+                                     rounded-sm transition-all text-sm font-medium flex-shrink-0">
+                <FaBars size={14} />
+                All
+              </button>
+              
+              <Link to="/deals" className="px-3 py-2 hover:border hover:border-white rounded-sm 
+                                          transition-all text-sm flex-shrink-0 hover:text-amazon-orange">
+                Today's Deals
+              </Link>
+              
+              <Link to="/products?category=electronics" className="px-3 py-2 hover:border hover:border-white 
+                                                              rounded-sm transition-all text-sm flex-shrink-0">
+                Electronics
+              </Link>
+              
+              <Link to="/products?category=fashion" className="px-3 py-2 hover:border hover:border-white 
+                                                           rounded-sm transition-all text-sm flex-shrink-0">
+                Fashion
+              </Link>
+              
+              <Link to="/products?category=books" className="px-3 py-2 hover:border hover:border-white 
+                                                         rounded-sm transition-all text-sm flex-shrink-0">
+                Books
+              </Link>
+              
+              <Link to="/products?category=home" className="px-3 py-2 hover:border hover:border-white 
+                                                        rounded-sm transition-all text-sm flex-shrink-0">
+                Home & Kitchen
+              </Link>
+              
+              <Link to="/products?category=sports" className="px-3 py-2 hover:border hover:border-white 
+                                                          rounded-sm transition-all text-sm flex-shrink-0">
+                Sports
+              </Link>
 
-        {/* Cart */}
-        <Link
-          to="/cart"
-          className="flex items-center px-2 py-2 hover:border hover:border-white rounded-sm relative"
-        >
-          <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" />
-          </svg>
-          <span className="text-sm font-bold mt-3">Cart</span>
-          {itemCount > 0 && (
-            <span className="absolute top-0 left-6 bg-amazon-orange text-white text-xs 
-                           font-bold rounded-full h-5 w-5 flex items-center justify-center">
-              {itemCount > 99 ? '99+' : itemCount}
-            </span>
-          )}
-        </Link>
-      </div>
+              <Link to="/products?category=beauty" className="px-3 py-2 hover:border hover:border-white 
+                                                           rounded-sm transition-all text-sm flex-shrink-0">
+                Beauty
+              </Link>
 
-      {/* Sub Navigation */}
-      <div className="bg-amazon-dark-gray text-white">
-        <div className="flex items-center px-4 py-1 gap-4 max-w-amazon mx-auto text-sm">
-          <button
-            onClick={() => dispatch(toggleMobileMenu())}
-            className="flex items-center gap-1 px-2 py-1 hover:border hover:border-white rounded-sm"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-            All
-          </button>
-          
-          <Link to="/deals" className="px-2 py-1 hover:border hover:border-white rounded-sm">
-            Today's Deals
-          </Link>
-          <Link to="/products?category=ELECTRONICS" className="px-2 py-1 hover:border hover:border-white rounded-sm">
-            Electronics
-          </Link>
-          <Link to="/products?category=FASHION" className="px-2 py-1 hover:border hover:border-white rounded-sm">
-            Fashion
-          </Link>
-          <Link to="/products?category=BOOKS" className="px-2 py-1 hover:border hover:border-white rounded-sm">
-            Books
-          </Link>
-          <Link to="/products?category=HOME_KITCHEN" className="px-2 py-1 hover:border hover:border-white rounded-sm">
-            Home & Kitchen
-          </Link>
-        </div>
-      </div>
-    </header>
+              <Link to="/products?category=toys" className="px-3 py-2 hover:border hover:border-white 
+                                                        rounded-sm transition-all text-sm flex-shrink-0">
+                Toys
+              </Link>
+
+              <Link to="/prime" className="px-3 py-2 hover:border hover:border-white rounded-sm 
+                                         transition-all text-sm flex-shrink-0 text-amazon-orange font-medium">
+                <FaCrown className="inline mr-1" size={12} />
+                Prime
+              </Link>
+            </div>
+          </div>
+        </nav>
+      </header>
+
+      {/* ===== MOBILE SIDEBAR ===== */}
+      {showMobileMenu && (
+        <>
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden" 
+               onClick={() => setShowMobileMenu(false)} />
+          <div className="fixed left-0 top-0 h-full w-80 bg-white z-50 lg:hidden shadow-2xl animate-slide-in overflow-y-auto">
+            <div className="bg-amazon-navy text-white p-4">
+              {isAuthenticated ? (
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-amazon-orange rounded-full flex items-center justify-center text-lg font-bold">
+                    {user?.firstName?.[0]}
+                  </div>
+                  <div>
+                    <p className="font-semibold">{user?.firstName} {user?.lastName}</p>
+                    <p className="text-xs text-gray-300">{user?.email}</p>
+                  </div>
+                </div>
+              ) : (
+                <button 
+                  onClick={() => { navigate('/login'); setShowMobileMenu(false); }}
+                  className="w-full bg-amazon-yellow text-gray-900 font-medium py-2 rounded-full text-sm"
+                >
+                  Sign In
+                </button>
+              )}
+            </div>
+            
+            <div className="p-4 space-y-1">
+              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Shop By Category</h3>
+              {['Electronics', 'Fashion', 'Books', 'Home & Kitchen', 'Sports', 'Beauty', 'Toys'].map(cat => (
+                <Link
+                  key={cat}
+                  to={`/products?category=${cat.toLowerCase()}`}
+                  onClick={() => setShowMobileMenu(false)}
+                  className="flex items-center gap-3 px-3 py-2.5 hover:bg-gray-100 rounded-lg text-sm text-gray-700 transition-colors"
+                >
+                  <span className="text-lg">{cat === 'Electronics' ? '🖥️' : cat === 'Fashion' ? '👗' : cat === 'Books' ? '📚' : cat === 'Home & Kitchen' ? '🏠' : cat === 'Sports' ? '⚽' : cat === 'Beauty' ? '💄' : '🧸'}</span>
+                  {cat}
+                </Link>
+              ))}
+              
+              <hr className="my-3" />
+              
+              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Help & Settings</h3>
+              <Link to="/account" onClick={() => setShowMobileMenu(false)} className="flex items-center gap-3 px-3 py-2.5 hover:bg-gray-100 rounded-lg text-sm text-gray-700">
+                <FaUser className="text-gray-400" /> Your Account
+              </Link>
+              <Link to="/orders" onClick={() => setShowMobileMenu(false)} className="flex items-center gap-3 px-3 py-2.5 hover:bg-gray-100 rounded-lg text-sm text-gray-700">
+                <FaBox className="text-gray-400" /> Your Orders
+              </Link>
+              <Link to="/wishlist" onClick={() => setShowMobileMenu(false)} className="flex items-center gap-3 px-3 py-2.5 hover:bg-gray-100 rounded-lg text-sm text-gray-700">
+                <FaHeart className="text-gray-400" /> Wishlist
+              </Link>
+              
+              {isAuthenticated && (
+                <>
+                  <hr className="my-3" />
+                  <button
+                    onClick={() => { logout(); setShowMobileMenu(false); }}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-red-50 rounded-lg text-sm text-red-600 transition-colors"
+                  >
+                    <FaSignOutAlt /> Sign Out
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </>
+      )}
+    </>
   );
 };
 
