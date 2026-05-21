@@ -37,7 +37,7 @@ export class Notification {
   user: User;
 
   @Column({
-    type: 'enum',
+    type: 'simple-enum',
     enum: [
       'ORDER_UPDATE',
       'PRICE_DROP',
@@ -71,7 +71,7 @@ export class Notification {
   @Column({ nullable: true })
   image?: string;
 
-  @Column({ type: 'jsonb', nullable: true })
+  @Column({ type: 'simple-json', nullable: true })
   data?: Record<string, any>;
 
   @Column({ default: false })

@@ -5,7 +5,7 @@ import ProtectedRoute from '@routes/ProtectedRoute';
 import LoadingSpinner from '@components/ui/Spinner/Spinner';
 import ErrorBoundary from '@components/common/ErrorBoundary';
 
-// Lazy load pages for code splitting
+// Lazy load pages
 const Home = lazy(() => import('@pages/Home/Home'));
 const ProductListing = lazy(() => import('@pages/ProductListing/ProductListing'));
 const ProductDetail = lazy(() => import('@pages/ProductDetail/ProductDetail'));
@@ -21,15 +21,11 @@ const Wishlist = lazy(() => import('@pages/Wishlist/Wishlist'));
 const SearchResults = lazy(() => import('@pages/Search/SearchResults'));
 const Deals = lazy(() => import('@pages/Deals/Deals'));
 const NotFound = lazy(() => import('@pages/NotFound/NotFound'));
+const AdminDashboard = lazy(() => import('@pages/Admin/AdminDashboard')); // ← ADDED
 
-/**
- * App Component
- * Main application with routing and error boundary
- */
 function App() {
   const location = useLocation();
 
-  // Scroll to top on route change
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [location.pathname]);
@@ -52,12 +48,12 @@ function App() {
             <Route path="cart" element={<Cart />} />
             <Route path="search" element={<SearchResults />} />
             <Route path="deals" element={<Deals />} />
-            
+
             {/* Auth Routes */}
             <Route path="login" element={<Login />} />
             <Route path="register" element={<Register />} />
             <Route path="forgot-password" element={<ForgotPassword />} />
-            
+
             {/* Protected Routes */}
             <Route element={<ProtectedRoute />}>
               <Route path="checkout" element={<Checkout />} />
@@ -65,8 +61,9 @@ function App() {
               <Route path="orders/:id" element={<OrderDetail />} />
               <Route path="account" element={<Account />} />
               <Route path="wishlist" element={<Wishlist />} />
+              <Route path="admin" element={<AdminDashboard />} /> {/* ← ADDED */}
             </Route>
-            
+
             {/* 404 Route */}
             <Route path="*" element={<NotFound />} />
           </Route>

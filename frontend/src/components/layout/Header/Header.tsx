@@ -172,7 +172,7 @@ const Header: React.FC = () => {
                       placeholder="Search Amazon..."
                       className="w-full h-[42px] px-4 text-sm
                                border border-gray-300 md:rounded-none md:border-l-0 rounded-l-lg
-                               text-gray-900 placeholder-gray-500
+                               text-white placeholder-gray-400
                                focus:outline-none transition-all"
                     />
                     

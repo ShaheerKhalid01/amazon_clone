@@ -62,7 +62,7 @@ export class Product {
 
   // Categorization
   @Column({
-    type: 'enum',
+    type: 'simple-enum',
     enum: ProductCategory,
   })
   @Index()
@@ -101,14 +101,14 @@ export class Product {
   reservedQuantity: number;
 
   @Column({
-    type: 'enum',
+    type: 'simple-enum',
     enum: ProductCondition,
     default: ProductCondition.NEW,
   })
   condition: ProductCondition;
 
   @Column({
-    type: 'enum',
+    type: 'simple-enum',
     enum: ProductAvailability,
     default: ProductAvailability.IN_STOCK,
   })

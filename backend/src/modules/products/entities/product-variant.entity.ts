@@ -47,7 +47,7 @@ export class ProductVariant {
   quantity: number;
 
   @Column({
-    type: 'enum',
+    type: 'simple-enum',
     enum: ProductAvailability,
     default: ProductAvailability.IN_STOCK,
   })

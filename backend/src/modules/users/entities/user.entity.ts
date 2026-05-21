@@ -11,6 +11,7 @@ import {
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import { UserRole, MembershipTier } from '@shared/enums';
+import { Review } from '../../reviews/review.entity';
 
 /**
  * User Entity
@@ -43,14 +44,14 @@ export class User {
   avatar?: string;
 
   @Column({
-    type: 'enum',
+    type: 'simple-enum',
     enum: UserRole,
     default: UserRole.CUSTOMER,
   })
   role: UserRole;
 
   @Column({
-    type: 'enum',
+    type: 'simple-enum',
     enum: MembershipTier,
     default: MembershipTier.FREE,
   })
@@ -119,8 +120,8 @@ export class User {
   @OneToMany('Order', 'user')
   orders: any[];
 
-  @OneToMany('Review', 'user')
-  reviews: any[];
+  @OneToMany(() => Review, (review) => review.user)
+  reviews: Review[];
 
   /**
    * Get full name

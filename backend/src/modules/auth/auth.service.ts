@@ -36,7 +36,19 @@ export class AuthService {
   constructor(
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
-  ) {}
+  ) {
+    // Initialize default admin user for quick testing
+    this.users.set('admin@example.com', {
+      id: uuidv4(),
+      email: 'admin@example.com',
+      password: bcrypt.hashSync('admin123', 10),
+      firstName: 'Admin',
+      lastName: 'User',
+      role: 'ADMIN',
+      membershipTier: 'FREE',
+      isActive: true,
+    });
+  }
 
   /**
    * Authenticate user with email and password

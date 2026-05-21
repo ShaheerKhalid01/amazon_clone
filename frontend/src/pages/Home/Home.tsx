@@ -211,7 +211,7 @@ const Home: React.FC = () => {
             <input
               type="email"
               placeholder="Enter your email"
-              className="flex-1 px-4 py-3 rounded-l-full text-gray-900 focus:outline-none focus:ring-2 focus:ring-amazon-orange"
+              className="flex-1 px-4 py-3 rounded-l-full text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amazon-orange"
             />
             <Button type="submit" variant="primary">
               Subscribe

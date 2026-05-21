@@ -46,11 +46,18 @@ import { LoggerMiddleware } from './common/middleware/logger.middleware';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
-        // Explicitly type the return value of get to match TypeORM's expected types
-        const dbType = configService.get<'postgres' | 'mysql' | 'mssql' | 'sqlite' | 'oracle' | 'cockroachdb'>('database.type', 'postgres');
-        
+        const dbType = configService.get<string>('database.type', 'sqlite');
+        if (dbType === 'sqlite') {
+          return {
+            type: 'sqlite',
+            database: configService.get<string>('database.database', 'db.sqlite'),
+            synchronize: configService.get<boolean>('database.synchronize', false),
+            logging: configService.get<boolean>('database.logging', false),
+            autoLoadEntities: true,
+          } as TypeOrmModuleOptions;
+        }
         return {
-          type: dbType, // No longer needs 'as any'
+          type: dbType,
           host: configService.get<string>('database.host', 'localhost'),
           port: configService.get<number>('database.port', 5432),
           username: configService.get<string>('database.username', 'user'),

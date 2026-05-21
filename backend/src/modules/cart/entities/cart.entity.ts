@@ -27,7 +27,7 @@ export class Cart {
   @JoinColumn({ name: 'userId' })
   user: User;
 
-  @Column({ type: 'jsonb', default: '[]' })
+  @Column({ type: 'simple-json', default: '[]' })
   items: CartItemData[];
 
   @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
@@ -48,7 +48,7 @@ export class Cart {
   @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
   couponDiscount: number;
 
-  @Column({ type: 'jsonb', nullable: true })
+  @Column({ type: 'simple-json', nullable: true })
   metadata?: {
     lastUpdated?: Date;
     ipAddress?: string;

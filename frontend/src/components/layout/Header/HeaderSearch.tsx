@@ -3,24 +3,25 @@ import { useNavigate } from 'react-router-dom';
 import { FaSearch, FaTimes } from 'react-icons/fa';
 
 const HeaderSearch: React.FC = () => {
-  const [query, setQuery] = useState('');
-  const [isFocused, setIsFocused] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [searchText, setSearchText] = useState('');
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (query.trim()) {
-      navigate(`/search?q=${encodeURIComponent(query.trim())}`);
-      setQuery('');
-      setIsFocused(false);
-      inputRef.current?.blur();
+    if (searchText.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchText.trim())}`);
+      setSearchText('');
+      setIsSearchFocused(false);
+      searchInputRef.current?.blur();
     }
   };
 
   const handleClear = () => {
-    setQuery('');
-    inputRef.current?.focus();
+    setSearchText('');
+    searchInputRef.current?.focus();
   };
 
   return (
@@ -28,7 +29,7 @@ const HeaderSearch: React.FC = () => {
       <div className={`
         relative flex items-center w-full
         transition-all duration-300 ease-in-out
-        ${isFocused ? 'scale-105' : 'scale-100'}
+        ${isSearchFocused ? 'scale-105' : 'scale-100'}
       `}>
         
         {/* Category Dropdown (Left Side) */}
@@ -56,27 +57,28 @@ const HeaderSearch: React.FC = () => {
 
         {/* Search Input */}
         <div className="relative flex-1">
-          <input
-            ref={inputRef}
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setTimeout(() => setIsFocused(false), 200)}
-            placeholder="Search Amazon..."
-            className="
-              w-full h-10 px-4 text-sm
-              border border-gray-300
-              md:rounded-none md:border-l-0
-              rounded-l-lg
-              text-gray-900 placeholder-gray-500
-              focus:outline-none focus:ring-2 focus:ring-amazon-orange focus:border-transparent
-              transition-all duration-200
-            "
-          />
+            <input
+              ref={searchInputRef}
+              type="text"
+              value={searchText}
+              onChange={(e) => {
+                setSearchText(e.target.value);
+                setShowSuggestions(true);
+              }}
+              onFocus={() => {
+                setIsSearchFocused(true);
+                if (searchText.length >= 2) setShowSuggestions(true);
+              }}
+              onBlur={() => setIsSearchFocused(false)}
+              placeholder="Search Amazon..."
+              className="w-full h-[42px] px-4 text-sm
+                         border border-gray-300 md:rounded-none md:border-l-0 rounded-l-lg
+                         text-white bg-amazon-navy placeholder-gray-400
+                         focus:outline-none transition-all"
+            />
           
           {/* Clear Button */}
-          {query && (
+          {searchText && (
             <button
               type="button"
               onClick={handleClear}
@@ -108,12 +110,12 @@ const HeaderSearch: React.FC = () => {
         </button>
 
         {/* Focus Overlay (Background Blur) */}
-        {isFocused && (
+        {isSearchFocused && (
           <div 
             className="fixed inset-0 bg-black bg-opacity-40 z-[-1]"
             onClick={() => {
-              setIsFocused(false);
-              inputRef.current?.blur();
+              setIsSearchFocused(false);
+              searchInputRef.current?.blur();
             }}
           />
         )}

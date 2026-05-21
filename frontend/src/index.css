@@ -85,4 +85,37 @@
   .card-amazon:hover {
     box-shadow: var(--shadow-amazon-hover);
   }
+
+  .header-white {
+    background-color: white;
+    color: var(--color-amazon-dark-gray);
+  }
+}
+/* Hide scrollbar for sub-nav */
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Search suggestion hover effect */
+.search-suggestion {
+  border-left: 3px solid transparent;
+}
+.search-suggestion:hover {
+  border-left-color: #FF9900;
+  background-color: #fef7ec;
+}
+
+/* Smooth animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-out;
 }

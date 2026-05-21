@@ -12,98 +12,67 @@ import {
 import type { AddToCartPayload } from '@/types/cart.types';
 import toast from 'react-hot-toast';
 
-/**
- * Custom hook for cart operations
- */
 export function useCart() {
   const dispatch = useDispatch<AppDispatch>();
-  const { cart, loading, error, isUpdating } = useSelector(
-    (state: RootState) => state.cart
-  );
+  const { cart, loading, error, isUpdating } = useSelector((state: RootState) => state.cart);
 
-  /**
-   * Load cart
-   */
   const loadCart = useCallback(() => {
     dispatch(fetchCart());
   }, [dispatch]);
 
-  /**
-   * Add item to cart
-   */
   const addToCart = useCallback(
     async (payload: AddToCartPayload) => {
       try {
         await dispatch(addToCartAction(payload)).unwrap();
         toast.success('Added to cart!');
       } catch (error: any) {
-        toast.error(error || 'Failed to add item');
+        const msg = typeof error === 'string' ? error : error?.message || 'Failed to add item';
+        toast.error(msg);
         throw error;
       }
     },
     [dispatch]
   );
 
-  /**
-   * Remove item from cart
-   */
   const removeFromCart = useCallback(
     async (productId: string) => {
       try {
         await dispatch(removeFromCartAction(productId)).unwrap();
         toast.success('Removed from cart');
       } catch (error: any) {
-        toast.error(error || 'Failed to remove item');
+        const msg = typeof error === 'string' ? error : error?.message || 'Failed to remove item';
+        toast.error(msg);
         throw error;
       }
     },
     [dispatch]
   );
 
-  /**
-   * Update item quantity
-   */
   const updateQuantity = useCallback(
     async (productId: string, quantity: number) => {
       if (quantity < 1) {
         await removeFromCart(productId);
         return;
       }
-      
-      // Optimistic update
       dispatch(updateLocalQuantity({ productId, quantity }));
-      
       try {
         await dispatch(updateQuantityAction({ productId, quantity })).unwrap();
       } catch (error: any) {
-        // Revert on failure by reloading cart
         dispatch(fetchCart());
-        toast.error(error || 'Failed to update quantity');
+        const msg = typeof error === 'string' ? error : error?.message || 'Failed to update quantity';
+        toast.error(msg);
       }
     },
     [dispatch, removeFromCart]
   );
 
-  /**
-   * Clear entire cart
-   */
   const clearCart = useCallback(() => {
     dispatch(clearCartAction());
   }, [dispatch]);
 
-  /**
-   * Get cart item count
-   */
   const itemCount = cart?.itemCount || 0;
-
-  /**
-   * Get cart total
-   */
   const cartTotal = cart?.total || 0;
 
-  /**
-   * Check if product is in cart
-   */
   const isInCart = useCallback(
     (productId: string) => {
       return cart?.items.some((item) => item.productId === productId) || false;
@@ -114,7 +83,7 @@ export function useCart() {
   return {
     cart,
     loading,
-    error,
+    error: typeof error === 'string' ? error : (error as any)?.message || null,
     isUpdating,
     itemCount,
     cartTotal,

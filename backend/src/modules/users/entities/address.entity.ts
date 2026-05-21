@@ -63,7 +63,7 @@ export class Address {
   @Column({ nullable: true, length: 500 })
   deliveryInstructions?: string;
 
-  @Column({ type: 'point', nullable: true })
+  @Column({ type: 'simple-json', nullable: true })
   coordinates?: {
     latitude: number;
     longitude: number;

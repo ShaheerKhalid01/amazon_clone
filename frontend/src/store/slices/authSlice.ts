@@ -2,9 +2,6 @@ import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { authService } from '@services/auth.service';
 import type { User, LoginCredentials, AuthResponse } from '@/types/user.types';
 
-/**
- * Auth State Interface
- */
 interface AuthState {
   user: User | null;
   accessToken: string | null;
@@ -14,35 +11,38 @@ interface AuthState {
   error: string | null;
 }
 
-/**
- * Initial State
- */
+const getStoredUser = (): User | null => {
+  try {
+    const stored = localStorage.getItem('user');
+    if (stored && stored !== 'undefined' && stored !== 'null') {
+      return JSON.parse(stored);
+    }
+    return null;
+  } catch {
+    return null;
+  }
+};
+
 const initialState: AuthState = {
-  user: JSON.parse(localStorage.getItem('user') || 'null'),
-  accessToken: localStorage.getItem('accessToken'),
-  refreshToken: localStorage.getItem('refreshToken'),
+  user: getStoredUser(),
+  accessToken: localStorage.getItem('accessToken') || null,
+  refreshToken: localStorage.getItem('refreshToken') || null,
   isAuthenticated: !!localStorage.getItem('accessToken'),
   loading: false,
   error: null,
 };
 
-/**
- * Async Thunks
- */
 export const loginUser = createAsyncThunk(
   'auth/login',
   async (credentials: LoginCredentials, { rejectWithValue }) => {
     try {
       const response = await authService.login(credentials);
-      
-      // Store tokens in localStorage
       localStorage.setItem('accessToken', response.accessToken);
       localStorage.setItem('refreshToken', response.refreshToken);
       localStorage.setItem('user', JSON.stringify(response.user));
-      
       return response;
     } catch (error: any) {
-      return rejectWithValue(error.message || 'Login failed');
+      return rejectWithValue(error?.message || 'Login failed');
     }
   }
 );
@@ -53,25 +53,17 @@ export const refreshAuthToken = createAsyncThunk(
     try {
       const state = getState() as { auth: AuthState };
       const refreshToken = state.auth.refreshToken;
-      
-      if (!refreshToken) {
-        throw new Error('No refresh token');
-      }
-      
+      if (!refreshToken) throw new Error('No refresh token');
       const response = await authService.refreshToken(refreshToken);
       localStorage.setItem('accessToken', response.accessToken);
       localStorage.setItem('refreshToken', response.refreshToken);
-      
       return response;
     } catch (error: any) {
-      return rejectWithValue(error.message || 'Token refresh failed');
+      return rejectWithValue(error?.message || 'Token refresh failed');
     }
   }
 );
 
-/**
- * Auth Slice
- */
 const authSlice = createSlice({
   name: 'auth',
   initialState,
@@ -101,7 +93,6 @@ const authSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
-    // Login
     builder.addCase(loginUser.pending, (state) => {
       state.loading = true;
       state.error = null;
@@ -117,14 +108,11 @@ const authSlice = createSlice({
       state.loading = false;
       state.error = action.payload as string;
     });
-    
-    // Refresh Token
     builder.addCase(refreshAuthToken.fulfilled, (state, action) => {
       state.accessToken = action.payload.accessToken;
       state.refreshToken = action.payload.refreshToken;
     });
     builder.addCase(refreshAuthToken.rejected, (state) => {
-      // Token refresh failed, logout user
       state.user = null;
       state.accessToken = null;
       state.refreshToken = null;
