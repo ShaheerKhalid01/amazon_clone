@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Amazon Clone — Interview Prep Roadmap</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Playfair+Display:wght@700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e0f11;
+    --surface: #161820;
+    --surface2: #1d1f26;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --text: #e8e6df;
+    --muted: #7a7870;
+    --accent-deep: #c8783a;
+    --accent: #e8904f;
+    --accent-glow: rgba(232,144,79,0.15);
+    --green: #4caf7d;
+    --green-bg: rgba(76,175,125,0.1);
+    --green-border: rgba(76,175,125,0.25);
+    --gray-bg: rgba(255,255,255,0.04);
+    --gray-border: rgba(255,255,255,0.08);
+    --tag-deep: #253347;
+    --tag-text: #6daadc;
+    --purple: #8b7fd4;
+    --purple-bg: rgba(139,127,212,0.1);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  .noise {
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 0;
+  }
+
+  .glow-orb {
+    position: fixed; border-radius: 50%; filter: blur(120px);
+    pointer-events: none; z-index: 0;
+  }
+  .glow-orb-1 { width: 600px; height: 600px; top: -200px; right: -100px; background: rgba(200,120,58,0.08); }
+  .glow-orb-2 { width: 400px; height: 400px; bottom: 100px; left: -100px; background: rgba(76,175,125,0.06); }
+
+  .container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 60px 32px 100px;
+    position: relative; z-index: 1;
+  }
+
+  /* Header */
+  .header { margin-bottom: 64px; }
+
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px; font-weight: 500;
+    color: var(--accent);
+    border: 1px solid rgba(232,144,79,0.3);
+    background: rgba(232,144,79,0.08);
+    padding: 4px 12px; border-radius: 20px;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+  .badge::before { content: '●'; font-size: 8px; }
+
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(36px, 5vw, 58px);
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--text);
+    margin-bottom: 16px;
+  }
+  h1 span { color: var(--accent); }
+
+  .subtitle {
+    font-size: 16px;
+    color: var(--muted);
+    max-width: 520px;
+    line-height: 1.7;
+  }
+
+  /* Stats bar */
+  .stats {
+    display: flex; gap: 32px;
+    margin-top: 40px;
+    padding-top: 32px;
+    border-top: 1px solid var(--border);
+  }
+  .stat-item { display: flex; flex-direction: column; gap: 2px; }
+  .stat-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 28px; font-weight: 500;
+    color: var(--text);
+  }
+  .stat-num.accent { color: var(--accent); }
+  .stat-num.green { color: var(--green); }
+  .stat-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+
+  /* Legend */
+  .legend {
+    display: flex; gap: 20px; flex-wrap: wrap;
+    margin-bottom: 40px;
+  }
+  .legend-item {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px; color: var(--muted);
+  }
+  .legend-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .legend-dot.deep { background: var(--accent); }
+  .legend-dot.general { background: var(--muted); opacity: 0.5; }
+
+  /* Section headers */
+  .section-label {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 16px;
+  }
+  .section-label h2 {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px; font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .section-label::after {
+    content: ''; flex: 1; height: 1px;
+    background: var(--border);
+  }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 4px; margin-bottom: 32px; }
+  .tab {
+    padding: 8px 20px;
+    border-radius: 8px;
+    font-size: 13px; font-weight: 400;
+    color: var(--muted);
+    cursor: pointer;
+    border: 1px solid transparent;
+    background: transparent;
+    transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .tab:hover { color: var(--text); background: var(--surface2); }
+  .tab.active {
+    color: var(--text);
+    background: var(--surface2);
+    border-color: var(--border2);
+  }
+
+  /* Panels */
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* Cards grid */
+  .cards { display: flex; flex-direction: column; gap: 12px; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    transition: border-color 0.25s, transform 0.2s;
+    cursor: pointer;
+  }
+  .card:hover {
+    border-color: var(--border2);
+    transform: translateY(-1px);
+  }
+  .card.deep-dive {
+    border-color: rgba(232,144,79,0.2);
+  }
+  .card.deep-dive:hover {
+    border-color: rgba(232,144,79,0.5);
+  }
+
+  .card-header {
+    display: flex; align-items: center;
+    gap: 12px; padding: 16px 20px;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .card-icon {
+    width: 36px; height: 36px;
+    border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; flex-shrink: 0;
+  }
+  .card-icon.deep { background: var(--accent-glow); }
+  .card-icon.general { background: var(--gray-bg); }
+
+  .card-title {
+    font-size: 15px; font-weight: 500;
+    color: var(--text);
+    flex: 1;
+  }
+
+  .card-meta {
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .priority-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px; font-weight: 500;
+    padding: 3px 9px; border-radius: 20px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .priority-badge.high {
+    background: rgba(232,144,79,0.15);
+    color: var(--accent);
+    border: 1px solid rgba(232,144,79,0.25);
+  }
+  .priority-badge.medium {
+    background: var(--purple-bg);
+    color: var(--purple);
+    border: 1px solid rgba(139,127,212,0.25);
+  }
+  .priority-badge.low {
+    background: var(--gray-bg);
+    color: var(--muted);
+    border: 1px solid var(--gray-border);
+  }
+
+  .chevron {
+    font-size: 12px; color: var(--muted);
+    transition: transform 0.25s;
+  }
+  .card.open .chevron { transform: rotate(180deg); }
+
+  /* Card body */
+  .card-body {
+    display: none;
+    padding: 0 20px 20px;
+    border-top: 1px solid var(--border);
+    margin-top: 0;
+    padding-top: 16px;
+  }
+  .card.open .card-body { display: block; }
+
+  .why-block {
+    background: var(--surface2);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 14px;
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+  .why-block strong { color: var(--text); font-weight: 500; }
+
+  .files-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 8px;
+  }
+
+  .files-list {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    margin-bottom: 14px;
+  }
+
+  .file-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    background: var(--tag-deep);
+    color: var(--tag-text);
+    padding: 3px 10px;
+    border-radius: 6px;
+    border: 1px solid rgba(109,170,220,0.15);
+  }
+
+  .concepts-list {
+    display: flex; flex-wrap: wrap; gap: 6px;
+  }
+  .concept-tag {
+    font-size: 12px;
+    background: var(--green-bg);
+    color: var(--green);
+    padding: 3px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--green-border);
+  }
+  .concept-tag.purple {
+    background: var(--purple-bg);
+    color: var(--purple);
+    border-color: rgba(139,127,212,0.2);
+  }
+
+  /* Tip box */
+  .tip-box {
+    background: rgba(232,144,79,0.06);
+    border: 1px solid rgba(232,144,79,0.18);
+    border-radius: 12px;
+    padding: 16px 18px;
+    margin: 32px 0 0;
+    display: flex; gap: 12px;
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.7;
+  }
+  .tip-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+  .tip-title { font-weight: 500; margin-bottom: 4px; color: var(--accent); font-size: 13px; }
+
+  /* Progress tracker */
+  .progress-section { margin-top: 48px; }
+  .progress-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-top: 16px;
+  }
+  .progress-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+  }
+  .progress-card-label {
+    font-size: 12px; color: var(--muted);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-family: 'DM Mono', monospace;
+  }
+  .progress-bar-track {
+    height: 4px;
+    background: var(--surface2);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 6px;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: var(--accent);
+    transition: width 1s ease;
+  }
+  .progress-bar-fill.green { background: var(--green); }
+  .progress-bar-fill.gray { background: var(--muted); }
+  .progress-nums {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px; color: var(--muted);
+    display: flex; justify-content: space-between;
+  }
+
+  /* Rule box */
+  .rule-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    margin-top: 32px;
+  }
+  .rule-box h3 {
+    font-size: 14px; font-weight: 500;
+    color: var(--text); margin-bottom: 16px;
+    font-family: 'DM Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+  }
+  .rule-list {
+    display: flex; flex-direction: column; gap: 10px;
+    list-style: none;
+  }
+  .rule-list li {
+    display: flex; gap: 10px;
+    font-size: 14px; color: var(--text);
+    line-height: 1.5;
+  }
+  .rule-list li::before {
+    content: '→';
+    color: var(--accent);
+    flex-shrink: 0;
+    font-family: 'DM Mono', monospace;
+  }
+
+  @media (max-width: 600px) {
+    .container { padding: 40px 20px 80px; }
+    .stats { gap: 20px; flex-wrap: wrap; }
+    .tabs { flex-wrap: wrap; }
+  }
+</style>
+</head>
+<body>
+<div class="noise"></div>
+<div class="glow-orb glow-orb-1"></div>
+<div class="glow-orb glow-orb-2"></div>
+
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="badge">Amazon Clone · Interview Prep</div>
+    <h1>Study <span>Roadmap</span></h1>
+    <p class="subtitle">Exactly which files deserve your full attention — and which ones you can safely skim. Built for full stack interviews.</p>
+
+    <div class="stats">
+      <div class="stat-item">
+        <span class="stat-num accent">12</span>
+        <span class="stat-label">Deep Dive files</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-num" style="color:var(--muted)">~20+</span>
+        <span class="stat-label">General idea only</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-num green">170</span>
+        <span class="stat-label">Total project files</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('frontend')">Frontend</button>
+    <button class="tab" onclick="switchTab('backend')">Backend</button>
+    <button class="tab" onclick="switchTab('skip')">Safely Skip</button>
+    <button class="tab" onclick="switchTab('rules')">The Rule</button>
+  </div>
+
+  <!-- FRONTEND PANEL -->
+  <div class="panel active" id="panel-frontend">
+    <div class="section-label"><h2>Frontend · Deep Dive Required</h2></div>
+    <div class="legend" style="margin-bottom:24px">
+      <div class="legend-item"><div class="legend-dot deep"></div> Deep dive — interviewers will dig here</div>
+      <div class="legend-item"><div class="legend-dot general"></div> General idea kaafi hai</div>
+    </div>
+
+    <div class="cards">
+
+      <div class="card deep-dive" onclick="toggleCard(this)">
+        <div class="card-header">
+          <div class="card-icon deep">🗃️</div>
+          <span class="card-title">store/slices/</span>
+          <div class="card-meta">
+            <span class="priority-badge high">Must Know</span>
+            <span class="chevron">▼</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="why-block">
+            <strong>Yeh sabse zyada puchha jata hai.</strong> Redux Toolkit patterns, Immer immutability, optimistic updates with rollback — yeh sab yahan se aata hai. Har slice ko line-by-line samajhna zaroori hai.
+          </div>
+          <div class="files-label">Files to study</div>
+          <div class="files-list">
+            <span class="file-tag">authSlice.ts</span>
+            <span class="file-tag">cartSlice.ts</span>
+            <span class="file-tag">wishlistSlice.ts</span>
+            <span class="file-tag">uiSlice.ts</span>
+          </div>
+          <div class="files-label">Key concepts</div>
+          <div class="concepts-list">
+            <span class="concept-tag">createAsyncThunk</span>
+            <span class="concept-tag">unwrap()</span>
+            <span class="concept-tag">Immer draft mutations</span>
+            <span class="concept-tag">optimistic updates</span>
+            <span class="concept-tag">rollback on error</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card deep-dive" onclick="toggleCard(this)">
+        <div class="card-header">
+          <div class="card-icon deep">🪝</div>
+          <span class="card-title">hooks/</span>
+          <div class="card-meta">
+            <span class="priority-badge high">Must Know</span>
+            <span class="chevron">▼</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="why-block">
+            <strong>Custom hooks ka deep understanding.</strong> Interviewers puchenge: "why did you extract this into a hook?", "how do you handle cleanup?", "kya ye hook re-renders cause kar sakta hai?" Har hook ka purpose aur isMounted pattern zaroor samajhna.
+          </div>
+          <div class="files-label">Files to study</div>
+          <div class="files-list">
+            <span class="file-tag">useAuth.ts</span>
+            <span class="file-tag">useProduct.ts</span>
+            <span class="file-tag">useCart.ts</span>
+          </div>
+          <div class="files-label">Key concepts</div>
+          <div class="concepts-list">
+            <span class="concept-tag">isMounted cleanup</span>
+            <span class="concept-tag">useCallback memoization</span>
+            <span class="concept-tag">dependency arrays</span>
+            <span class="concept-tag">stale closure prevention</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card deep-dive" onclick="toggleCard(this)">
+        <div class="card-header">
+          <div class="card-icon deep">🌐</div>
+          <span class="card-title">services/</span>
+          <div class="card-meta">
+            <span class="priority-badge high">Must Know</span>
+            <span class="chevron">▼</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="why-block">
+            <strong>API layer ka poora architecture.</strong> Yahan axios interceptors, token refresh logic, aur error normalization hota hai. Interview mein aksar puchha jata hai: "how do you handle 401 errors globally?"
+          </div>
+          <div class="files-label">Files to study</div>
+          <div class="files-list">
+            <span class="file-tag">api.ts</span>
+            <span class="file-tag">authService.ts</span>
+            <span class="file-tag">productService.ts</span>
+            <span class="file-tag">cartService.ts</span>
+          </div>
+          <div class="files-label">Key concepts</div>
+          <div class="concepts-list">
+            <span class="concept-tag">axios interceptors</span>
+            <span class="concept-tag">token refresh</span>
+            <span class="concept-tag">error normalization</span>
+            <span class="concept-tag">request cancellation</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card deep-dive" onclick="toggleCard(this)">
+        <div class="card-header">
+          <div class="card-icon deep">⚙️</div>
+          <span class="card-title">store/middleware/</span>
+          <div class="card-meta">
+            <span class="priority-badge medium">Important</span>
+            <span class="chevron">▼</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="why-block">
+            <strong>Custom middleware ka "why" samajhna zaroori hai.</strong> Yahan logging, error handling, ya side effects manage hote hain. Interviewer puchega: "Redux Thunk se alag kyun hai?"
+          </div>
+          <div class="files-label">Key concepts</div>
+          <div class="concepts-list">
+            <span class="concept-tag">middleware chain</span>
+            <span class="concept-tag">action interception</span>
+            <span class="concept-tag">side effect management</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card deep-dive" onclick="toggleCard(this)">
+        <div class="card-header">
+          <div class="card-icon deep">🔀</div>
+          <span class="card-title">context/ (if used)</span>
+          <div class="card-meta">
+            <span class="priority-badge medium">Important</span>
+            <span class="chevron">▼</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="why-block">
+            <strong>Context vs Redux tradeoffs ka jawab ready rakhna.</strong> "When would you use Context over Redux?" — yeh sab se common React interview question hai. Agar project mein Context hai, deeply samajhna.
+          </div>
+          <div class="files-label">Key concepts</div>
+          <div class="concepts-list">
+            <span class="concept-tag">Context vs Redux</span>
+            <span class="concept-tag">provider tree</span>
+            <span class="concept-tag">re-render optimization</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- General idea items -->
+      <div style="margin-top: 24px;">
+        <div class="section-label"><h2>Frontend · General Idea Kaafi Hai</h2></div>
+      </div>
+
+      <div class="card" onclick="toggleCard(this)">
+        <div class="card-header">
+          <div class="card-icon general">📦</div>
+          <span class="card-title">components/ui/ — Individual UI components</span>
+          <div class="card-meta">
+            <span class="priority-badge low">Skim only</span>
+            <span class="chevron">▼</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="why-block">
+            Button, Modal, Spinner, Tabs etc. — inhe sirf itna samajhna kaafi hai ki kya karte hain. Props aur usage pattern dekhna, internals nahi.
+          </div>
+          <div class="files-list">
+            <span class="file-tag">components/ui/*</span>
+            <span class="file-tag">components/common/*</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" onclick="toggleCard(this)">
+        <div class="card-header">
+          <div class="card-icon general">📄</div>
+          <span class="card-title">pages/ — Route-level page components</span>
+          <div class="card-meta">
+            <span class="priority-badge low">Skim only</span>
+            <span class="chevron">▼</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="why-block">
+            Sirf yeh samajhna kaafi hai ki kaunsi page kya render karti hai aur kaunse hooks/services use karti hai. Internal JSX deeply samajhna zaroori nahi.
+          </div>
+          <div class="files-list">
+            <span class="file-tag">pages/Home</span>
+            <span class="file-tag">pages/Cart</span>
+            <span class="file-tag">pages/Checkout</span>
+            <span class="file-tag">pages/Auth</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" onclick="toggleCard(this)">
+        <div class="card-header">
+          <div class="card-icon general">🛣️</div>
+          <span class="card-title">routes/, styles/, assets/, types/</span>
+          <div class="card-meta">
+            <span class="priority-badge low">Skim only</span>
+            <span class="chevron">▼</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="why-block">
+            Routing structure, TypeScript types, global styles — yeh support code hai. Sirf ek baar dekh lena kaafi hai. Deep explanation ki zaroorat nahi.
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <div class="tip-box">
+      <div class="tip-icon">⚡</div>
+      <div>
+        <div class="tip-title">Frontend Ka Golden Rule</div>
+        Jis bhi file mein <strong>state management, async logic, ya API calls</strong> hain — woh deep dive hai. Sirf rendering ya UI layout wali files ko skim karo.
+      </div>
+    </div>
+  </div>
+
+  <!-- BACKEND PANEL -->
+  <div class="panel" id="panel-backend">
+    <div class="section-label"><h2>Backend · NestJS — Deep Dive Required</h2></div>
+
+    <div class="cards">
+
+      <div class="card deep-dive" onclick="toggleCard(this)">
+        <div class="card-header">
+          <div class="card-icon deep">🔐</div>
+          <span class="card-title">modules/auth/</span>
+          <div class="card-meta">
+            <span class="priority-badge high">Must Know</span>
+            <span class="chevron">▼</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="why-block">
+            <strong>Interviewers ka sabse favorite topic.</strong> JWT strategy, Passport integration, guards — yeh sab deeply samajhna zaroori hai. "How do you protect a route?" is the most common backend question.
+          </div>
+          <div class="files-label">Files to study</div>
+          <div class="files-list">
+            <span class="file-tag">auth.module.ts</span>
+            <span class="file-tag">auth.service.ts</span>
+            <span class="file-tag">jwt.strategy.ts</span>
+            <span class="file-tag">auth.guard.ts</span>
+            <span class="file-tag">dto/*.ts</span>
+          </div>
+          <div class="files-label">Key concepts</div>
+          <div class="concepts-list">
+            <span class="concept-tag">JWT access/refresh tokens</span>
+            <span class="concept-tag">Passport.js strategies</span>
+            <span class="concept-tag">Guards vs Middleware</span>
+            <span class="concept-tag">bcrypt password hashing</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card deep-dive" onclick="toggleCard(this)">
+        <div class="card-header">
+          <div class="card-icon deep">🛡️</div>
+          <span class="card-title">common/guards/ + common/interceptors/ + common/pipes/</span>
+          <div class="card-meta">
+            <span class="priority-badge high">Must Know</span>
+            <span class="chevron">▼</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="why-block">
+            <strong>NestJS request lifecycle ka dil yahan hai.</strong> "Explain the order of Guards, Interceptors, and Pipes" — yeh NestJS ka most asked question hai. Har ek ka purpose aur order clear hona chahiye.
+          </div>
+          <div class="files-label">Key concepts</div>
+          <div class="concepts-list">
+            <span class="concept-tag">Request lifecycle order</span>
+            <span class="concept-tag">Guards → Interceptors → Pipes</span>
+            <span class="concept-tag">Exception filters</span>
+            <span class="concept-tag">Validation pipes</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card deep-dive" onclick="toggleCard(this)">
+        <div class="card-header">
+          <div class="card-icon deep">🛒</div>
+          <span class="card-title">modules/cart/ + modules/orders/ + modules/products/</span>
+          <div class="card-meta">
+            <span class="priority-badge high">Must Know</span>
+            <span class="chevron">▼</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="why-block">
+            <strong>Core business logic — yeh tumhara project ka heart hai.</strong> Interviewer yahan se real scenarios puchega: "How do you handle concurrent cart updates?", "What happens if payment fails after order creation?" Deep samjhna zaroori hai.
+          </div>
+          <div class="files-label">Key folders</div>
+          <div class="files-list">
+            <span class="file-tag">cart/*.service.ts</span>
+            <span class="file-tag">orders/*.service.ts</span>
+            <span class="file-tag">products/*.service.ts</span>
+            <span class="file-tag">entities/*.ts</span>
+          </div>
+          <div class="files-label">Key concepts</div>
+          <div class="concepts-list">
+            <span class="concept-tag">TypeORM relations</span>
+            <span class="concept-tag">Transaction management</span>
+            <span class="concept-tag">DTO validation</span>
+            <span class="concept-tag">Business logic errors</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card deep-dive" onclick="toggleCard(this)">
+        <div class="card-header">
+          <div class="card-icon deep">💳</div>
+          <span class="card-title">modules/payments/</span>
+          <div class="card-meta">
+            <span class="priority-badge medium">Important</span>
+            <span class="chevron">▼</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="why-block">
+            <strong>Stripe integration ka "why" samajhna zaroori hai.</strong> Webhooks, idempotency, retry logic — yeh sab real-world patterns hain jo interviewers dekhna chahte hain.
+          </div>
+          <div class="files-label">Key concepts</div>
+          <div class="concepts-list">
+            <span class="concept-tag">Stripe webhooks</span>
+            <span class="concept-tag">Payment idempotency</span>
+            <span class="concept-tag">Refund handling</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card deep-dive" onclick="toggleCard(this)">
+        <div class="card-header">
+          <div class="card-icon deep">⚡</div>
+          <span class="card-title">cache/ + common/middleware/</span>
+          <div class="card-meta">
+            <span class="priority-badge medium">Important</span>
+            <span class="chevron">▼</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="why-block">
+            <strong>Redis caching strategy aur request middleware.</strong> "How do you cache product listings?" aur "What middleware do you use for logging?" — performance-focused companies yeh zaroor puchenge.
+          </div>
+          <div class="files-label">Key concepts</div>
+          <div class="concepts-list">
+            <span class="concept-tag">Redis cache TTL</span>
+            <span class="concept-tag">Cache invalidation</span>
+            <span class="concept-tag">Request logging middleware</span>
+            <span class="concept-tag">Rate limiting</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top: 24px;">
+        <div class="section-label"><h2>Backend · General Idea Kaafi Hai</h2></div>
+      </div>
+
+      <div class

@@ -1,0 +1,88 @@
+@import "tailwindcss";
+
+@theme {
+  --color-amazon-orange: #FF9900;
+  --color-amazon-orange-dark: #E47911;
+  --color-amazon-navy: #232F3E;
+  --color-amazon-blue: #007185;
+  --color-amazon-blue-dark: #004B52;
+  --color-amazon-dark-gray: #131921;
+  --color-amazon-light-gray: #EAEDED;
+  --color-amazon-yellow: #FEBD69;
+
+  --font-amazon: "Amazon Ember", Arial, sans-serif;
+
+  --shadow-amazon: 0 2px 5px 0 rgba(213, 217, 217, 0.5);
+  --shadow-amazon-hover: 0 4px 8px 0 rgba(213, 217, 217, 0.5);
+
+  --max-width-amazon: 1500px;
+}
+
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-amazon-light-gray);
+    color: var(--color-gray-900);
+    font-family: var(--font-amazon);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@layer components {
+  /* Amazon Button Styles */
+  .btn-amazon {
+    background-color: var(--color-amazon-orange);
+    color: white;
+    font-weight: 500;
+    padding: 0.5rem 1.5rem;
+    border-radius: 9999px;
+    transition: all 0.2s;
+  }
+  .btn-amazon:hover {
+    background-color: var(--color-amazon-orange-dark);
+  }
+
+  .btn-amazon-secondary {
+    background-color: var(--color-gray-200);
+    color: var(--color-gray-800);
+    font-weight: 500;
+    padding: 0.5rem 1.5rem;
+    border-radius: 9999px;
+    transition: all 0.2s;
+  }
+  .btn-amazon-secondary:hover {
+    background-color: var(--color-gray-300);
+  }
+
+  /* Amazon Link */
+  .link-amazon {
+    color: var(--color-amazon-blue);
+    transition: color 0.2s;
+    cursor: pointer;
+  }
+  .link-amazon:hover {
+    color: var(--color-amazon-blue-dark);
+    text-decoration: underline;
+  }
+
+  /* Amazon Card */
+  .card-amazon {
+    background-color: white;
+    border-radius: 0.5rem;
+    box-shadow: var(--shadow-amazon);
+    transition: all 0.2s;
+  }
+  .card-amazon:hover {
+    box-shadow: var(--shadow-amazon-hover);
+  }
+}
