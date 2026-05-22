@@ -1,54 +1,34 @@
-import { useSelector, useDispatch } from 'react-redux';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useCallback } from 'react';
-import { RootState, AppDispatch } from '@store/index';
-import { loginUser, logout as logoutAction, clearError } from '@store/slices/authSlice';
-import type { LoginCredentials } from '@/types/user.types';
+import { authService } from '@services/auth.service';
 import toast from 'react-hot-toast';
 
 export function useAuth() {
-  const dispatch = useDispatch<AppDispatch>();
+  const [user, setUser] = useState(authService.getCurrentUser());
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const { user, isAuthenticated, loading, error } = useSelector(
-    (state: RootState) => state.auth
-  );
+  const isAuthenticated = !!user && !!localStorage.getItem('accessToken');
 
-  const login = useCallback(
-    async (credentials: LoginCredentials) => {
-      try {
-        const result = await dispatch(loginUser(credentials)).unwrap();
-        // ✅ Safe access
-        const firstName = result?.user?.firstName || 'User';
-        toast.success(`Welcome back, ${firstName}!`);
-        navigate('/');
-        return result;
-      } catch (error: any) {
-        const msg = typeof error === 'string' ? error : error?.message || 'Login failed';
-        toast.error(msg);
-        throw error;
-      }
-    },
-    [dispatch, navigate]
-  );
+  const login = useCallback(async (credentials: any) => {
+    setLoading(true);
+    try {
+      const result = await authService.login(credentials);
+      setUser(result.user);
+      toast.success(`Welcome, ${result.user?.firstName}!`);
+      navigate('/');
+    } catch (error: any) {
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  }, [navigate]);
 
-  const handleLogout = useCallback(() => {
-    dispatch(logoutAction());
-    toast.success('Logged out successfully');
+  const logout = useCallback(() => {
+    authService.logout();
+    setUser(null);
     navigate('/');
-  }, [dispatch, navigate]);
+  }, [navigate]);
 
-  const handleClearError = useCallback(() => {
-    dispatch(clearError());
-  }, [dispatch]);
-
-  return {
-    user,
-    isAuthenticated,
-    loading,
-    error: typeof error === 'string' ? error : null,
-    login,
-    logout: handleLogout,
-    clearError: handleClearError,
-  };
+  return { user, isAuthenticated, loading, login, logout };
 }
