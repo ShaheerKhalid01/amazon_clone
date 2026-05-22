@@ -5,6 +5,7 @@ import { RootState, AppDispatch } from '@store/index';
 import { addToCart as addToCartAction, removeFromCart as removeFromCartAction, updateCartItemQuantity as updateQuantityAction, clearCart as clearCartAction, updateLocalQuantity } from '@store/slices/cartSlice';
 import type { AddToCartPayload } from '@/types/cart.types';
 import toast from 'react-hot-toast';
+import { fetchCart } from '@store/slices/cartSlice';
 
 export function useCart() {
   const dispatch = useDispatch<AppDispatch>();

@@ -7,8 +7,8 @@ import { mockProducts, mockCategories } from '@services/mockData';
 const Home: React.FC = () => {
   const navigate = useNavigate();
 
-  const featuredProducts = mockProducts.filter(p => p.isBestSeller).slice(0, 8);
-  const deals = mockProducts.filter(p => p.isOnSale).slice(0, 8);
+  const deals = mockProducts.filter(p => p.pricing?.isOnSale).slice(0, 8);
+const featuredProducts = mockProducts.filter(p => p.isBestSeller).slice(0, 8);
   const categories = mockCategories;
 
   const quickLinks = [

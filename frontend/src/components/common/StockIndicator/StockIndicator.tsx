@@ -1,20 +1,17 @@
 import React from 'react';
 
 interface StockIndicatorProps {
-  availability: 'IN_STOCK' | 'OUT_OF_STOCK' | 'LOW_STOCK' | 'PRE_ORDER';
+  availability: string;
   quantity?: number;
   showQuantity?: boolean;
 }
 
-/**
- * Stock Indicator Component
- */
 const StockIndicator: React.FC<StockIndicatorProps> = ({
   availability,
   quantity,
   showQuantity = true,
 }) => {
-  const config = {
+  const config: Record<string, { color: string; bgColor: string; dot: string; label: string; icon: string }> = {
     IN_STOCK: {
       color: 'text-green-600',
       bgColor: 'bg-green-50',
@@ -45,21 +42,18 @@ const StockIndicator: React.FC<StockIndicatorProps> = ({
     },
   };
 
-  const { color, bgColor, dot, label, icon } = config[availability] || config.IN_STOCK;
+  const current = config[availability] || config.IN_STOCK;
+  const { color, bgColor, dot, label, icon } = current;
 
   return (
     <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full ${bgColor} ${color} text-sm font-medium`}>
       <span className={`w-2 h-2 ${dot} rounded-full animate-pulse`} />
       <span>{label}</span>
       {showQuantity && quantity !== undefined && availability === 'IN_STOCK' && (
-        <span className="text-gray-500 font-normal">
-          ({quantity} available)
-        </span>
+        <span className="text-gray-500 font-normal">({quantity} available)</span>
       )}
       {availability === 'LOW_STOCK' && quantity !== undefined && quantity > 0 && (
-        <span className="text-yellow-700 font-normal">
-          Only {quantity} left
-        </span>
+        <span className="text-yellow-700 font-normal">Only {quantity} left</span>
       )}
     </div>
   );
