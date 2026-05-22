@@ -5,7 +5,7 @@ class ApiService {
 
   constructor() {
     this.api = axios.create({
-      baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
+      baseURL: 'https://amazon-clone-pcrs.onrender.com/api',
       timeout: 15000,
       headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
     });
