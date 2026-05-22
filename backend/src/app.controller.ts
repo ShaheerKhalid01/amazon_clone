@@ -1,17 +1,14 @@
-import { Controller, Get } from '@nestjs/common';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
-import { AppService } from './app.service';
-import { Public } from './common/decorators/public.decorator';
+import { Controller, Post, Body } from '@nestjs/common';
 
-@ApiTags('Health')
-@Controller()
-export class AppController {
-  constructor(private readonly appService: AppService) {}
-
-  @Public()
-  @Get('health')
-  @ApiOperation({ summary: 'Health check endpoint' })
-  healthCheck() {
-    return this.appService.getHealth();
+@Controller('api/auth')
+export class AuthController {
+  @Post('login')
+  login(@Body() body: any) {
+    return { message: 'Login works!', body };
+  }
+  
+  @Post('register')
+  register(@Body() body: any) {
+    return { message: 'Register works!', body };
   }
 }
