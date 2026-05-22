@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { authService } from '@services/auth.service';
-import type { User, LoginCredentials, AuthResponse } from '@/types/user.types';
+import type { User, LoginCredentials } from '@/types/user.types';
 
 interface AuthState {
   user: User | null;
@@ -14,13 +14,9 @@ interface AuthState {
 const getStoredUser = (): User | null => {
   try {
     const stored = localStorage.getItem('user');
-    if (stored && stored !== 'undefined' && stored !== 'null') {
-      return JSON.parse(stored);
-    }
-    return null;
-  } catch {
-    return null;
-  }
+    if (!stored || stored === 'undefined' || stored === 'null' || stored === '') return null;
+    return JSON.parse(stored);
+  } catch { return null; }
 };
 
 const initialState: AuthState = {
@@ -32,8 +28,7 @@ const initialState: AuthState = {
   error: null,
 };
 
-export const loginUser = createAsyncThunk(
-  'auth/login',
+export const loginUser = createAsyncThunk('auth/login',
   async (credentials: LoginCredentials, { rejectWithValue }) => {
     try {
       const response = await authService.login(credentials);
@@ -47,56 +42,15 @@ export const loginUser = createAsyncThunk(
   }
 );
 
-export const refreshAuthToken = createAsyncThunk(
-  'auth/refresh',
-  async (_, { getState, rejectWithValue }) => {
-    try {
-      const state = getState() as { auth: AuthState };
-      const refreshToken = state.auth.refreshToken;
-      if (!refreshToken) throw new Error('No refresh token');
-      const response = await authService.refreshToken(refreshToken);
-      localStorage.setItem('accessToken', response.accessToken);
-      localStorage.setItem('refreshToken', response.refreshToken);
-      return response;
-    } catch (error: any) {
-      return rejectWithValue(error?.message || 'Token refresh failed');
-    }
-  }
-);
-
 const authSlice = createSlice({
-  name: 'auth',
-  initialState,
+  name: 'auth', initialState,
   reducers: {
-    setUser: (state, action: PayloadAction<User | null>) => {
-      state.user = action.payload;
-      state.isAuthenticated = !!action.payload;
-    },
-    setTokens: (state, action: PayloadAction<{ accessToken: string; refreshToken: string }>) => {
-      state.accessToken = action.payload.accessToken;
-      state.refreshToken = action.payload.refreshToken;
-      localStorage.setItem('accessToken', action.payload.accessToken);
-      localStorage.setItem('refreshToken', action.payload.refreshToken);
-    },
-    logout: (state) => {
-      state.user = null;
-      state.accessToken = null;
-      state.refreshToken = null;
-      state.isAuthenticated = false;
-      state.error = null;
-      localStorage.removeItem('user');
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-    },
-    clearError: (state) => {
-      state.error = null;
-    },
+    setUser: (state, action: PayloadAction<User | null>) => { state.user = action.payload; state.isAuthenticated = !!action.payload; },
+    logout: (state) => { state.user = null; state.accessToken = null; state.refreshToken = null; state.isAuthenticated = false; state.error = null; },
+    clearError: (state) => { state.error = null; },
   },
   extraReducers: (builder) => {
-    builder.addCase(loginUser.pending, (state) => {
-      state.loading = true;
-      state.error = null;
-    });
+    builder.addCase(loginUser.pending, (state) => { state.loading = true; state.error = null; });
     builder.addCase(loginUser.fulfilled, (state, action) => {
       state.loading = false;
       state.user = action.payload.user;
@@ -105,21 +59,10 @@ const authSlice = createSlice({
       state.isAuthenticated = true;
     });
     builder.addCase(loginUser.rejected, (state, action) => {
-      state.loading = false;
-      state.error = action.payload as string;
-    });
-    builder.addCase(refreshAuthToken.fulfilled, (state, action) => {
-      state.accessToken = action.payload.accessToken;
-      state.refreshToken = action.payload.refreshToken;
-    });
-    builder.addCase(refreshAuthToken.rejected, (state) => {
-      state.user = null;
-      state.accessToken = null;
-      state.refreshToken = null;
-      state.isAuthenticated = false;
+      state.loading = false; state.error = action.payload as string;
     });
   },
 });
 
-export const { setUser, setTokens, logout, clearError } = authSlice.actions;
+export const { setUser, logout, clearError } = authSlice.actions;
 export default authSlice.reducer;

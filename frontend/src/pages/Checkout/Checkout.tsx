@@ -1,236 +1,147 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useCart } from '@hooks/useCart';
-import { useAuth } from '@hooks/useAuth';
-import CheckoutSteps from '@components/checkout/CheckoutSteps/CheckoutSteps';
-import ShippingAddress from '@components/checkout/ShippingAddress/ShippingAddress';
-import PaymentMethod from '@components/checkout/PaymentMethod/PaymentMethod';
-import OrderReview from '@components/checkout/OrderReview/OrderReview';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { RootState } from '@store/index';
 import Button from '@components/ui/Button/Button';
 import { formatPrice } from '@utils/formatPrice';
-import { FaLock } from 'react-icons/fa';
+import { FaLock, FaTrash } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 
-/**
- * Checkout Page Component
- * Multi-step checkout process
- */
 const Checkout: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const { cart, itemCount, clearCart } = useCart();
+  const [searchParams] = useSearchParams();
+  const isBuyNow = searchParams.get('buyNow') === 'true';
+  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
+  const token = localStorage.getItem('accessToken');
 
-  const [currentStep, setCurrentStep] = useState(0);
+  const [shippingData, setShippingData] = useState({
+    fullName: 'John Doe',
+    phoneNumber: '+1-555-0123',
+    streetAddress: '123 Main Street',
+    city: 'New York',
+    state: 'NY',
+    zipCode: '10001',
+    country: 'United States',
+  });
+
+  const [paymentData, setPaymentData] = useState({
+    cardNumber: '4242424242424242',
+    cardholderName: 'John Doe',
+    expiryDate: '12/28',
+    cvv: '123',
+  });
+
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Form states
-  const [shippingData, setShippingData] = useState<any>(null);
-  const [paymentData, setPaymentData] = useState<any>(null);
-  const [promoCode, setPromoCode] = useState('');
-  const [promoDiscount, setPromoDiscount] = useState(0);
+  // Get items from cart (Redux) OR buyNow from localStorage
+  const buyNowItem = isBuyNow ? JSON.parse(localStorage.getItem('buyNowItem') || 'null') : null;
 
-  // Checkout steps configuration
-  const steps = [
-    { id: 'shipping', label: 'Shipping', number: 1 },
-    { id: 'payment', label: 'Payment', number: 2 },
-    { id: 'review', label: 'Review', number: 3 },
-  ];
+  const items = buyNowItem
+    ? [buyNowItem]
+    : []; // Cart items from Redux (skip for now)
 
-  // Pricing calculations
-  const subtotal = cart?.subtotal || 0;
+  const subtotal = items.reduce((sum: number, item: any) => sum + (item.totalPrice || item.price * item.quantity), 0);
   const shippingCost = subtotal > 25 ? 0 : 5.99;
   const tax = subtotal * 0.08;
-  const total = subtotal + shippingCost + tax - promoDiscount;
+  const total = subtotal + shippingCost + tax;
 
-  /**
-   * Handle shipping form submission
-   */
-  const handleShippingSubmit = (data: any) => {
-    setShippingData(data);
-    setCurrentStep(1);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  // Redirect if not logged in
+  useEffect(() => {
+    if (!isAuthenticated && !token) {
+      navigate('/login');
+    }
+  }, [isAuthenticated, token, navigate]);
 
-  /**
-   * Handle payment form submission
-   */
-  const handlePaymentSubmit = (data: any) => {
-    setPaymentData(data);
-    setCurrentStep(2);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  /**
-   * Handle place order
-   */
   const handlePlaceOrder = async () => {
+    setIsProcessing(true);
     try {
-      setIsProcessing(true);
-      
-      // Simulate order placement
+      // ✅ Simulate order placement (no backend call)
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Clear cart
-      await clearCart();
-      
+
+      // Clear buy now item
+      localStorage.removeItem('buyNowItem');
+
       toast.success('Order placed successfully!');
       navigate('/orders');
     } catch (error: any) {
-      toast.error(error.message || 'Failed to place order');
+      toast.error(error?.message || 'Failed to place order');
     } finally {
       setIsProcessing(false);
     }
   };
 
-  /**
-   * Apply promo code
-   */
-  const handleApplyPromo = () => {
-    if (promoCode.toUpperCase() === 'SAVE10') {
-      setPromoDiscount(subtotal * 0.1);
-      toast.success('10% discount applied!');
-    } else if (promoCode.toUpperCase() === 'SAVE20') {
-      setPromoDiscount(subtotal * 0.2);
-      toast.success('20% discount applied!');
-    } else {
-      toast.error('Invalid promo code');
-    }
-  };
-
-  /**
-   * Go back to previous step
-   */
-  const handleBack = () => {
-    setCurrentStep(prev => Math.max(0, prev - 1));
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  if (!cart || cart.items.length === 0) {
+  if (!isAuthenticated && !token) {
     return (
-      <div className="max-w-amazon mx-auto px-4 py-12 text-center">
-        <h1 className="text-2xl font-bold text-gray-900 mb-4">Your cart is empty</h1>
-        <p className="text-gray-600 mb-6">Add items to your cart to checkout</p>
-        <Button variant="primary" onClick={() => navigate('/products')}>
-          Continue Shopping
-        </Button>
+      <div className="max-w-4xl mx-auto px-4 py-20 text-center">
+        <h1 className="text-2xl font-bold mb-4">Please Login</h1>
+        <Button variant="primary" onClick={() => navigate('/login')}>Go to Login</Button>
       </div>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Checkout</h1>
-        <div className="hidden md:flex items-center gap-2 text-sm text-gray-500">
-          <FaLock className="text-green-600" />
-          <span>Secure Checkout</span>
-        </div>
-      </div>
+    <div className="max-w-4xl mx-auto px-4 py-8">
+      <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-8">Checkout</h1>
 
-      {/* Steps Progress */}
-      <CheckoutSteps steps={steps} currentStep={currentStep} />
-
-      <div className="flex flex-col lg:flex-row gap-8 mt-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Main Content */}
-        <div className="flex-1">
-          {/* Step 0: Shipping Address */}
-          {currentStep === 0 && (
-            <ShippingAddress
-              user={user}
-              onSubmit={handleShippingSubmit}
-              initialData={shippingData}
-            />
-          )}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Shipping Address */}
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <h2 className="text-lg font-semibold mb-4">1. Shipping Address</h2>
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <input className="border rounded-lg px-3 py-2" placeholder="Full Name" value={shippingData.fullName} onChange={e => setShippingData({ ...shippingData, fullName: e.target.value })} />
+              <input className="border rounded-lg px-3 py-2" placeholder="Phone" value={shippingData.phoneNumber} onChange={e => setShippingData({ ...shippingData, phoneNumber: e.target.value })} />
+              <input className="border rounded-lg px-3 py-2 col-span-2" placeholder="Street Address" value={shippingData.streetAddress} onChange={e => setShippingData({ ...shippingData, streetAddress: e.target.value })} />
+              <input className="border rounded-lg px-3 py-2" placeholder="City" value={shippingData.city} onChange={e => setShippingData({ ...shippingData, city: e.target.value })} />
+              <input className="border rounded-lg px-3 py-2" placeholder="State" value={shippingData.state} onChange={e => setShippingData({ ...shippingData, state: e.target.value })} />
+              <input className="border rounded-lg px-3 py-2" placeholder="ZIP" value={shippingData.zipCode} onChange={e => setShippingData({ ...shippingData, zipCode: e.target.value })} />
+              <input className="border rounded-lg px-3 py-2" placeholder="Country" value={shippingData.country} onChange={e => setShippingData({ ...shippingData, country: e.target.value })} />
+            </div>
+          </div>
 
-          {/* Step 1: Payment Method */}
-          {currentStep === 1 && (
-            <PaymentMethod
-              onSubmit={handlePaymentSubmit}
-              onBack={handleBack}
-              initialData={paymentData}
-            />
-          )}
+          {/* Payment Method */}
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <h2 className="text-lg font-semibold mb-4">2. Payment Method</h2>
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <input className="border rounded-lg px-3 py-2 col-span-2" placeholder="Card Number" value={paymentData.cardNumber} onChange={e => setPaymentData({ ...paymentData, cardNumber: e.target.value })} />
+              <input className="border rounded-lg px-3 py-2" placeholder="Cardholder Name" value={paymentData.cardholderName} onChange={e => setPaymentData({ ...paymentData, cardholderName: e.target.value })} />
+              <input className="border rounded-lg px-3 py-2" placeholder="MM/YY" value={paymentData.expiryDate} onChange={e => setPaymentData({ ...paymentData, expiryDate: e.target.value })} />
+              <input className="border rounded-lg px-3 py-2" placeholder="CVV" value={paymentData.cvv} onChange={e => setPaymentData({ ...paymentData, cvv: e.target.value })} />
+            </div>
+          </div>
 
-          {/* Step 2: Order Review */}
-          {currentStep === 2 && (
-            <OrderReview
-              cart={cart}
-              shippingData={shippingData}
-              paymentData={paymentData}
-              subtotal={subtotal}
-              shippingCost={shippingCost}
-              tax={tax}
-              promoDiscount={promoDiscount}
-              total={total}
-              onPlaceOrder={handlePlaceOrder}
-              onBack={handleBack}
-              isProcessing={isProcessing}
-            />
-          )}
+          {/* Order Items */}
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <h2 className="text-lg font-semibold mb-4">3. Order Items</h2>
+            {items.map((item: any, i: number) => (
+              <div key={i} className="flex items-center gap-4 py-3 border-b last:border-0">
+                <img src={item.image || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=80&h=80&fit=crop'} alt={item.title} className="w-16 h-16 object-cover rounded-lg" />
+                <div className="flex-1">
+                  <p className="font-medium text-sm">{item.title}</p>
+                  <p className="text-xs text-gray-500">Qty: {item.quantity}</p>
+                </div>
+                <p className="font-bold">{formatPrice(item.totalPrice || item.price * item.quantity)}</p>
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* Order Summary Sidebar */}
-        <div className="lg:w-80">
-          <div className="sticky top-24">
-            <div className="card-amazon p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Order Summary
-              </h3>
-
-              <div className="space-y-3 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Items ({itemCount})</span>
-                  <span>{formatPrice(subtotal)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Shipping</span>
-                  <span className={shippingCost === 0 ? 'text-green-600' : ''}>
-                    {shippingCost === 0 ? 'FREE' : formatPrice(shippingCost)}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Estimated Tax</span>
-                  <span>{formatPrice(tax)}</span>
-                </div>
-                {promoDiscount > 0 && (
-                  <div className="flex justify-between text-green-600">
-                    <span>Promo Discount</span>
-                    <span>-{formatPrice(promoDiscount)}</span>
-                  </div>
-                )}
-                <hr />
-                <div className="flex justify-between text-lg font-bold">
-                  <span>Order Total</span>
-                  <span className="text-amazon-red">{formatPrice(total)}</span>
-                </div>
-              </div>
-
-              {/* Promo Code */}
-              <div className="mt-4">
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={promoCode}
-                    onChange={(e) => setPromoCode(e.target.value)}
-                    placeholder="Promo code"
-                    className="flex-1 px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-amazon-orange"
-                  />
-                  <Button variant="secondary" size="sm" onClick={handleApplyPromo}>
-                    Apply
-                  </Button>
-                </div>
-              </div>
-
-              {/* Free Shipping Notice */}
-              {subtotal < 25 && (
-                <div className="mt-4 p-3 bg-amazon-orange bg-opacity-10 rounded-lg text-sm">
-                  <p className="text-gray-700">
-                    Add {formatPrice(25 - subtotal)} more for FREE shipping!
-                  </p>
-                </div>
-              )}
+        {/* Order Summary */}
+        <div className="lg:col-span-1">
+          <div className="bg-white rounded-lg shadow-sm p-6 sticky top-24">
+            <h3 className="text-lg font-semibold mb-4">Order Summary</h3>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between"><span className="text-gray-600">Subtotal</span><span>{formatPrice(subtotal)}</span></div>
+              <div className="flex justify-between"><span className="text-gray-600">Shipping</span><span className={shippingCost === 0 ? 'text-green-600' : ''}>{shippingCost === 0 ? 'FREE' : formatPrice(shippingCost)}</span></div>
+              <div className="flex justify-between"><span className="text-gray-600">Tax</span><span>{formatPrice(tax)}</span></div>
+              <hr />
+              <div className="flex justify-between text-lg font-bold"><span>Total</span><span className="text-amazon-red">{formatPrice(total)}</span></div>
             </div>
+            <Button variant="primary" size="lg" fullWidth className="mt-6" onClick={handlePlaceOrder} loading={isProcessing}>
+              <FaLock className="mr-2" />
+              {isProcessing ? 'Placing Order...' : 'Place Order'}
+            </Button>
           </div>
         </div>
       </div>

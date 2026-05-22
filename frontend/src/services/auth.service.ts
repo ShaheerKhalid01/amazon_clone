@@ -1,70 +1,75 @@
 import apiService from './api';
-import type { 
-  LoginCredentials, 
-  RegisterData, 
-  AuthResponse, 
-  User 
-} from '@/types/user.types';
+import type { LoginCredentials, AuthResponse, User } from '@/types/user.types';
 
 class AuthService {
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     const response = await apiService.post<AuthResponse>('/auth/login', credentials);
-    if (response.accessToken) {
-      this.setTokens(response.accessToken, response.refreshToken);
-      this.setUser(response.user);
+    const data = (response as any)?.data || response;
+
+    const authResponse: AuthResponse = {
+      accessToken: data?.accessToken || '',
+      refreshToken: data?.refreshToken || '',
+      expiresIn: data?.expiresIn || 900,
+      user: data?.user || null,
+    };
+
+    if (authResponse.accessToken) {
+      localStorage.setItem('accessToken', authResponse.accessToken);
+      localStorage.setItem('refreshToken', authResponse.refreshToken || '');
+      localStorage.setItem('user', JSON.stringify(authResponse.user));
     }
-    return response;
+
+    return authResponse;
   }
 
-  async register(data: RegisterData): Promise<AuthResponse> {
+  async register(data: any): Promise<AuthResponse> {
     const response = await apiService.post<AuthResponse>('/auth/register', data);
-    if (response.accessToken) {
-      this.setTokens(response.accessToken, response.refreshToken);
-      this.setUser(response.user);
+    const respData = (response as any)?.data || response;
+
+    const authResponse: AuthResponse = {
+      accessToken: respData?.accessToken || '',
+      refreshToken: respData?.refreshToken || '',
+      expiresIn: respData?.expiresIn || 900,
+      user: respData?.user || null,
+    };
+
+    if (authResponse.accessToken) {
+      localStorage.setItem('accessToken', authResponse.accessToken);
+      localStorage.setItem('refreshToken', authResponse.refreshToken || '');
+      localStorage.setItem('user', JSON.stringify(authResponse.user));
     }
-    return response;
-  }
 
-  async logout(): Promise<void> {
-    try {
-      await apiService.post('/auth/logout');
-    } finally {
-      this.clearAuth();
-    }
-  }
-
-  async getProfile(): Promise<User> {
-    const user = await apiService.get<User>('/auth/profile');
-    this.setUser(user);
-    return user;
-  }
-
-  async forgotPassword(email: string): Promise<{ message: string }> {
-    return apiService.post('/auth/forgot-password', { email });
+    return authResponse;
   }
 
   async refreshToken(token: string): Promise<{ accessToken: string; refreshToken: string }> {
     return apiService.post('/auth/refresh', { refreshToken: token });
   }
 
-  getCurrentUser(): User | null {
-    const userStr = localStorage.getItem('user');
-    return userStr ? JSON.parse(userStr) : null;
-  }
-
-  private setUser(user: User): void {
-    localStorage.setItem('user', JSON.stringify(user));
-  }
-
-  private setTokens(accessToken: string, refreshToken: string): void {
-    localStorage.setItem('accessToken', accessToken);
-    localStorage.setItem('refreshToken', refreshToken);
-  }
-
-  private clearAuth(): void {
+  async logout(): Promise<void> {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
+  }
+
+  async getProfile(): Promise<User> {
+    return apiService.get<User>('/auth/profile');
+  }
+
+  async forgotPassword(email: string): Promise<{ message: string }> {
+    return apiService.post('/auth/forgot-password', { email });
+  }
+
+  getCurrentUser(): User | null {
+    try {
+      const stored = localStorage.getItem('user');
+      if (!stored || stored === 'undefined' || stored === 'null') return null;
+      return JSON.parse(stored);
+    } catch { return null; }
+  }
+
+  isAuthenticated(): boolean {
+    return !!localStorage.getItem('accessToken');
   }
 }
 

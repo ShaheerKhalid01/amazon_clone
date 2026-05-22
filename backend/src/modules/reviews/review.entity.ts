@@ -1,21 +1,24 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { User } from '../users/entities/user.entity';
-import { Product } from '../products/entities/product.entity';
 
 @Entity('reviews')
 export class Review {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'int', default: 0 })
+  @Column()
+  productId: string;
+
+  @Column()
+  userId: string;
+
+  // ✅ FIXED: Remove relation or fix it
+  // @ManyToOne(() => User, (user) => user.reviews)
+  // user: User;
+
+  @Column({ type: 'text' })
+  content: string;
+
+  @Column({ type: 'decimal', precision: 3, scale: 2 })
   rating: number;
-
-  @Column({ nullable: true })
-  comment?: string;
-
-  @ManyToOne(() => User, (user) => user.reviews, { onDelete: 'CASCADE' })
-  user: User;
-
-  @ManyToOne(() => Product, (product) => product.reviews, { onDelete: 'CASCADE' })
-  product: Product;
 }

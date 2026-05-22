@@ -1,27 +1,38 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '@store/index';
 import { useAuth } from '@hooks/useAuth';
-import { useCart } from '@hooks/useCart';
 import { FaSearch, FaTimes, FaMapMarkerAlt, FaShoppingCart, FaUser, FaHeart, FaBox, FaChevronDown, FaBars, FaSignOutAlt, FaCrown, FaClock, FaList } from 'react-icons/fa';
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuth();
-  const { itemCount } = useCart();
   const { searchQuery } = useSelector((state: RootState) => state.ui);
 
   // Search State
   const [searchText, setSearchText] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const searchInputRef = useRef<HTMLInputElement>(null);
-  const suggestionsRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = React.useRef<HTMLInputElement>(null);
+  const suggestionsRef = React.useRef<HTMLDivElement>(null);
 
   // Dropdown States
   const [showAccountDropdown, setShowAccountDropdown] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
+
+  // ✅ Load cart count from localStorage
+  useEffect(() => {
+    const items = JSON.parse(localStorage.getItem('cartItems') || '[]');
+    setCartCount(items.reduce((sum: number, item: any) => sum + item.quantity, 0));
+
+    const handleCartUpdate = (e: CustomEvent) => {
+      setCartCount(e.detail.itemCount);
+    };
+    window.addEventListener('cartUpdated', handleCartUpdate as EventListener);
+    return () => window.removeEventListener('cartUpdated', handleCartUpdate as EventListener);
+  }, []);
 
   // Mock suggestions
   const suggestions = searchText.length >= 2 ? [
@@ -117,9 +128,7 @@ const Header: React.FC = () => {
                 <span className="text-white">ama</span>
                 <span className="text-amazon-orange">zon</span>
               </span>
-              <span className="hidden md:block text-[10px] text-amazon-orange -mt-0.5 leading-none">
-                clone
-              </span>
+              <span className="hidden md:block text-[10px] text-amazon-orange -mt-0.5 leading-none">clone</span>
             </Link>
 
             {/* ===== DELIVERY LOCATION ===== */}
@@ -134,16 +143,10 @@ const Header: React.FC = () => {
             {/* ===== SEARCH BAR ===== */}
             <div className="flex-1 max-w-3xl mx-auto search-container">
               <form onSubmit={handleSearch}>
-                <div className={`
-                  flex items-center transition-all duration-300
-                  ${isSearchFocused ? 'ring-4 ring-amazon-orange/30 rounded-lg' : 'rounded-lg'}
-                `}>
+                <div className={`flex items-center transition-all duration-300 ${isSearchFocused ? 'ring-4 ring-amazon-orange/30 rounded-lg' : 'rounded-lg'}`}>
                   {/* Category Dropdown */}
                   <div className="hidden md:block relative">
-                    <select className="h-[42px] px-3 text-xs bg-gray-100 hover:bg-gray-200 
-                                     border border-gray-300 rounded-l-lg border-r-0
-                                     text-gray-700 cursor-pointer font-medium
-                                     focus:outline-none appearance-none pr-7 transition-colors">
+                    <select className="h-[42px] px-3 text-xs bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded-l-lg border-r-0 text-gray-700 cursor-pointer font-medium focus:outline-none appearance-none pr-7 transition-colors">
                       <option>All</option>
                       <option>Electronics</option>
                       <option>Fashion</option>
@@ -160,47 +163,22 @@ const Header: React.FC = () => {
                       ref={searchInputRef}
                       type="text"
                       value={searchText}
-                      onChange={(e) => {
-                        setSearchText(e.target.value);
-                        setShowSuggestions(true);
-                      }}
-                      onFocus={() => {
-                        setIsSearchFocused(true);
-                        if (searchText.length >= 2) setShowSuggestions(true);
-                      }}
+                      onChange={(e) => { setSearchText(e.target.value); setShowSuggestions(true); }}
+                      onFocus={() => { setIsSearchFocused(true); if (searchText.length >= 2) setShowSuggestions(true); }}
                       onBlur={() => setIsSearchFocused(false)}
                       placeholder="Search Amazon..."
-                      className="w-full h-[42px] px-4 text-sm
-                               border border-gray-300 md:rounded-none md:border-l-0 rounded-l-lg
-                               text-white placeholder-gray-400
-                               focus:outline-none transition-all"
+                      className="w-full h-[42px] px-4 text-sm border border-gray-300 md:rounded-none md:border-l-0 rounded-l-lg text-gray-900 placeholder-gray-500 focus:outline-none transition-all"
                     />
-                    
-                    {/* Clear Button */}
                     {searchText && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSearchText('');
-                          searchInputRef.current?.focus();
-                        }}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 
-                                 p-1.5 text-gray-400 hover:text-gray-600 
-                                 rounded-full hover:bg-gray-200 transition-all"
-                      >
+                      <button type="button" onClick={() => { setSearchText(''); searchInputRef.current?.focus(); }}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-200 transition-all">
                         <FaTimes size={14} />
                       </button>
                     )}
                   </div>
 
                   {/* Search Button */}
-                  <button
-                    type="submit"
-                    className="h-[42px] px-5 bg-amazon-orange hover:bg-amazon-orange-dark
-                             text-white rounded-r-lg transition-all duration-200
-                             hover:shadow-lg active:scale-95
-                             flex items-center gap-1.5 font-medium"
-                  >
+                  <button type="submit" className="h-[42px] px-5 bg-amazon-orange hover:bg-amazon-orange-dark text-white rounded-r-lg transition-all duration-200 hover:shadow-lg active:scale-95 flex items-center gap-1.5 font-medium">
                     <FaSearch size={18} />
                     <span className="hidden sm:inline text-sm">Search</span>
                   </button>
@@ -209,27 +187,14 @@ const Header: React.FC = () => {
 
               {/* Search Suggestions Dropdown */}
               {showSuggestions && searchText.length >= 2 && (
-                <div 
-                  ref={suggestionsRef}
-                  className="absolute mt-1 w-full max-w-3xl bg-white border border-gray-200 
-                           rounded-lg shadow-2xl z-50 overflow-hidden animate-fade-in"
-                >
+                <div ref={suggestionsRef} className="absolute mt-1 w-full max-w-3xl bg-white border border-gray-200 rounded-lg shadow-2xl z-50 overflow-hidden">
                   {suggestions.map((suggestion, index) => (
-                    <button
-                      key={index}
-                      onClick={() => handleSuggestionClick(suggestion)}
-                      className="w-full text-left px-4 py-2.5 text-sm text-gray-700 
-                               hover:bg-gray-50 flex items-center gap-3 border-b 
-                               border-gray-100 last:border-0 transition-colors
-                               search-suggestion group"
-                    >
-                      <FaSearch className="text-gray-400 group-hover:text-amazon-orange transition-colors" size={12} />
+                    <button key={index} onClick={() => handleSuggestionClick(suggestion)}
+                      className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 border-b border-gray-100 last:border-0">
+                      <FaSearch className="text-gray-400" size={12} />
                       <span>{suggestion}</span>
                     </button>
                   ))}
-                  <div className="px-4 py-2 bg-gray-50 text-xs text-gray-500 text-right">
-                    Press <kbd className="px-1 py-0.5 bg-gray-200 rounded text-xs font-mono">ESC</kbd> to close
-                  </div>
                 </div>
               )}
             </div>
@@ -245,71 +210,36 @@ const Header: React.FC = () => {
 
               {/* Account Dropdown */}
               <div className="relative account-dropdown">
-                <button
-                  onClick={() => setShowAccountDropdown(!showAccountDropdown)}
-                  className="flex flex-col px-2 py-1.5 hover:border hover:border-white rounded-sm transition-all"
-                >
+                <button onClick={() => setShowAccountDropdown(!showAccountDropdown)}
+                  className="flex flex-col px-2 py-1.5 hover:border hover:border-white rounded-sm transition-all">
                   <span className="text-xs text-gray-300 leading-none">
-                    {isAuthenticated ? `Hello, ${user?.firstName}` : 'Hello, sign in'}
+                    {isAuthenticated ? `Hello, ${user?.firstName || 'User'}` : 'Hello, sign in'}
                   </span>
                   <span className="text-sm font-bold leading-tight flex items-center gap-0.5">
-                    Account & Lists
-                    <FaChevronDown size={8} className="text-gray-400" />
+                    Account & Lists <FaChevronDown size={8} className="text-gray-400" />
                   </span>
                 </button>
 
-                {/* Dropdown Menu */}
                 {showAccountDropdown && (
-                  <div className="absolute right-0 top-full mt-1 w-72 bg-white text-gray-900 
-                                rounded-lg shadow-2xl border z-50 animate-fade-in overflow-hidden">
+                  <div className="absolute right-0 top-full mt-1 w-72 bg-white text-gray-900 rounded-lg shadow-2xl border z-50 overflow-hidden">
                     {isAuthenticated ? (
-                      <>
-                        <div className="p-4 bg-gray-50 border-b">
+                      <div className="p-2">
+                        <div className="p-3 bg-gray-50 border-b mb-2">
                           <p className="font-semibold">{user?.firstName} {user?.lastName}</p>
                           <p className="text-xs text-gray-500">{user?.email}</p>
                         </div>
-                        <div className="p-2">
-                          <Link to="/account" className="flex items-center gap-3 px-3 py-2 hover:bg-gray-100 rounded text-sm transition-colors"
-                            onClick={() => setShowAccountDropdown(false)}>
-                            <FaUser className="text-gray-400" /> Your Account
-                          </Link>
-                          <Link to="/orders" className="flex items-center gap-3 px-3 py-2 hover:bg-gray-100 rounded text-sm transition-colors"
-                            onClick={() => setShowAccountDropdown(false)}>
-                            <FaBox className="text-gray-400" /> Your Orders
-                          </Link>
-                          <Link to="/wishlist" className="flex items-center gap-3 px-3 py-2 hover:bg-gray-100 rounded text-sm transition-colors"
-                            onClick={() => setShowAccountDropdown(false)}>
-                            <FaHeart className="text-gray-400" /> Wishlist
-                          </Link>
-                          <Link to="/orders" className="flex items-center gap-3 px-3 py-2 hover:bg-gray-100 rounded text-sm transition-colors"
-                            onClick={() => setShowAccountDropdown(false)}>
-                            <FaClock className="text-gray-400" /> Browsing History
-                          </Link>
-                          <hr className="my-2" />
-                          <button
-                            onClick={() => { logout(); setShowAccountDropdown(false); }}
-                            className="w-full flex items-center gap-3 px-3 py-2 hover:bg-red-50 rounded text-sm text-red-600 transition-colors"
-                          >
-                            <FaSignOutAlt /> Sign Out
-                          </button>
-                        </div>
-                      </>
+                        <Link to="/account" onClick={() => setShowAccountDropdown(false)} className="flex items-center gap-3 px-3 py-2 hover:bg-gray-100 rounded text-sm"><FaUser className="text-gray-400" /> Your Account</Link>
+                        <Link to="/orders" onClick={() => setShowAccountDropdown(false)} className="flex items-center gap-3 px-3 py-2 hover:bg-gray-100 rounded text-sm"><FaBox className="text-gray-400" /> Your Orders</Link>
+                        <Link to="/wishlist" onClick={() => setShowAccountDropdown(false)} className="flex items-center gap-3 px-3 py-2 hover:bg-gray-100 rounded text-sm"><FaHeart className="text-gray-400" /> Wishlist</Link>
+                        <hr className="my-2" />
+                        <button onClick={() => { logout(); setShowAccountDropdown(false); navigate('/'); }}
+                          className="w-full flex items-center gap-3 px-3 py-2 hover:bg-red-50 rounded text-sm text-red-600"><FaSignOutAlt /> Sign Out</button>
+                      </div>
                     ) : (
                       <div className="p-4">
-                        <button
-                          onClick={() => { navigate('/login'); setShowAccountDropdown(false); }}
-                          className="w-full bg-amazon-yellow hover:bg-amazon-yellow-dark text-gray-900 
-                                   font-medium py-2 px-6 rounded-full transition-colors text-sm"
-                        >
-                          Sign In
-                        </button>
-                        <p className="text-xs text-center mt-3 text-gray-600">
-                          New customer?{' '}
-                          <Link to="/register" onClick={() => setShowAccountDropdown(false)} 
-                                className="text-amazon-blue hover:underline">
-                            Start here.
-                          </Link>
-                        </p>
+                        <button onClick={() => { navigate('/login'); setShowAccountDropdown(false); }}
+                          className="w-full bg-amazon-yellow hover:bg-amazon-yellow-dark text-gray-900 font-medium py-2 px-6 rounded-full transition-colors text-sm">Sign In</button>
+                        <p className="text-xs text-center mt-3 text-gray-600">New customer? <Link to="/register" onClick={() => setShowAccountDropdown(false)} className="text-amazon-blue hover:underline">Start here.</Link></p>
                       </div>
                     )}
                   </div>
@@ -325,13 +255,10 @@ const Header: React.FC = () => {
               {/* Cart */}
               <Link to="/cart" className="flex items-center px-2 py-1.5 hover:border hover:border-white rounded-sm transition-all relative">
                 <div className="relative">
-                  <FaShoppingCart size={28} className="text-white" />
-                  {itemCount > 0 && (
-                    <span className="absolute -top-2 -right-3 bg-amazon-orange text-white 
-                                   text-xs font-bold rounded-full min-w-[20px] h-5 
-                                   flex items-center justify-center px-1
-                                   animate-bounce-slow shadow-md">
-                      {itemCount > 99 ? '99+' : itemCount}
+                  <FaShoppingCart size={28} />
+                  {cartCount > 0 && (
+                    <span className="absolute -top-2 -right-3 bg-amazon-orange text-white text-xs font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center px-1">
+                      {cartCount > 99 ? '99+' : cartCount}
                     </span>
                   )}
                 </div>
@@ -345,58 +272,18 @@ const Header: React.FC = () => {
         <nav className="bg-amazon-dark-gray text-white border-t border-gray-700">
           <div className="max-w-amazon mx-auto px-4">
             <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide">
-              
-              <button className="flex items-center gap-1.5 px-3 py-2 hover:border hover:border-white 
-                                     rounded-sm transition-all text-sm font-medium flex-shrink-0">
-                <FaBars size={14} />
-                All
+              <button className="flex items-center gap-1.5 px-3 py-2 hover:border hover:border-white rounded-sm transition-all text-sm font-medium flex-shrink-0">
+                <FaBars size={14} /> All
               </button>
-              
-              <Link to="/deals" className="px-3 py-2 hover:border hover:border-white rounded-sm 
-                                          transition-all text-sm flex-shrink-0 hover:text-amazon-orange">
-                Today's Deals
-              </Link>
-              
-              <Link to="/products?category=electronics" className="px-3 py-2 hover:border hover:border-white 
-                                                              rounded-sm transition-all text-sm flex-shrink-0">
-                Electronics
-              </Link>
-              
-              <Link to="/products?category=fashion" className="px-3 py-2 hover:border hover:border-white 
-                                                           rounded-sm transition-all text-sm flex-shrink-0">
-                Fashion
-              </Link>
-              
-              <Link to="/products?category=books" className="px-3 py-2 hover:border hover:border-white 
-                                                         rounded-sm transition-all text-sm flex-shrink-0">
-                Books
-              </Link>
-              
-              <Link to="/products?category=home" className="px-3 py-2 hover:border hover:border-white 
-                                                        rounded-sm transition-all text-sm flex-shrink-0">
-                Home & Kitchen
-              </Link>
-              
-              <Link to="/products?category=sports" className="px-3 py-2 hover:border hover:border-white 
-                                                          rounded-sm transition-all text-sm flex-shrink-0">
-                Sports
-              </Link>
-
-              <Link to="/products?category=beauty" className="px-3 py-2 hover:border hover:border-white 
-                                                           rounded-sm transition-all text-sm flex-shrink-0">
-                Beauty
-              </Link>
-
-              <Link to="/products?category=toys" className="px-3 py-2 hover:border hover:border-white 
-                                                        rounded-sm transition-all text-sm flex-shrink-0">
-                Toys
-              </Link>
-
-              <Link to="/prime" className="px-3 py-2 hover:border hover:border-white rounded-sm 
-                                         transition-all text-sm flex-shrink-0 text-amazon-orange font-medium">
-                <FaCrown className="inline mr-1" size={12} />
-                Prime
-              </Link>
+              <Link to="/deals" className="px-3 py-2 hover:border hover:border-white rounded-sm transition-all text-sm flex-shrink-0 hover:text-amazon-orange">Today's Deals</Link>
+              <Link to="/products?category=electronics" className="px-3 py-2 hover:border hover:border-white rounded-sm transition-all text-sm flex-shrink-0">Electronics</Link>
+              <Link to="/products?category=fashion" className="px-3 py-2 hover:border hover:border-white rounded-sm transition-all text-sm flex-shrink-0">Fashion</Link>
+              <Link to="/products?category=books" className="px-3 py-2 hover:border hover:border-white rounded-sm transition-all text-sm flex-shrink-0">Books</Link>
+              <Link to="/products?category=home-kitchen" className="px-3 py-2 hover:border hover:border-white rounded-sm transition-all text-sm flex-shrink-0">Home & Kitchen</Link>
+              <Link to="/products?category=sports-outdoors" className="px-3 py-2 hover:border hover:border-white rounded-sm transition-all text-sm flex-shrink-0">Sports</Link>
+              <Link to="/products?category=beauty" className="px-3 py-2 hover:border hover:border-white rounded-sm transition-all text-sm flex-shrink-0">Beauty</Link>
+              <Link to="/products?category=toys-games" className="px-3 py-2 hover:border hover:border-white rounded-sm transition-all text-sm flex-shrink-0">Toys</Link>
+              <Link to="/prime" className="px-3 py-2 hover:border hover:border-white rounded-sm transition-all text-sm flex-shrink-0 text-amazon-orange font-medium"><FaCrown className="inline mr-1" size={12} />Prime</Link>
             </div>
           </div>
         </nav>
@@ -405,14 +292,13 @@ const Header: React.FC = () => {
       {/* ===== MOBILE SIDEBAR ===== */}
       {showMobileMenu && (
         <>
-          <div className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden" 
-               onClick={() => setShowMobileMenu(false)} />
-          <div className="fixed left-0 top-0 h-full w-80 bg-white z-50 lg:hidden shadow-2xl animate-slide-in overflow-y-auto">
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden" onClick={() => setShowMobileMenu(false)} />
+          <div className="fixed left-0 top-0 h-full w-80 bg-white z-50 lg:hidden shadow-2xl overflow-y-auto">
             <div className="bg-amazon-navy text-white p-4">
               {isAuthenticated ? (
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-amazon-orange rounded-full flex items-center justify-center text-lg font-bold">
-                    {user?.firstName?.[0]}
+                    {user?.firstName?.[0] || 'U'}
                   </div>
                   <div>
                     <p className="font-semibold">{user?.firstName} {user?.lastName}</p>
@@ -420,51 +306,29 @@ const Header: React.FC = () => {
                   </div>
                 </div>
               ) : (
-                <button 
-                  onClick={() => { navigate('/login'); setShowMobileMenu(false); }}
-                  className="w-full bg-amazon-yellow text-gray-900 font-medium py-2 rounded-full text-sm"
-                >
-                  Sign In
-                </button>
+                <button onClick={() => { navigate('/login'); setShowMobileMenu(false); }}
+                  className="w-full bg-amazon-yellow text-gray-900 font-medium py-2 rounded-full text-sm">Sign In</button>
               )}
             </div>
-            
             <div className="p-4 space-y-1">
               <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Shop By Category</h3>
               {['Electronics', 'Fashion', 'Books', 'Home & Kitchen', 'Sports', 'Beauty', 'Toys'].map(cat => (
-                <Link
-                  key={cat}
-                  to={`/products?category=${cat.toLowerCase()}`}
-                  onClick={() => setShowMobileMenu(false)}
-                  className="flex items-center gap-3 px-3 py-2.5 hover:bg-gray-100 rounded-lg text-sm text-gray-700 transition-colors"
-                >
+                <Link key={cat} to={`/products?category=${cat.toLowerCase().replace(' & ', '-')}`} onClick={() => setShowMobileMenu(false)}
+                  className="flex items-center gap-3 px-3 py-2.5 hover:bg-gray-100 rounded-lg text-sm text-gray-700">
                   <span className="text-lg">{cat === 'Electronics' ? '🖥️' : cat === 'Fashion' ? '👗' : cat === 'Books' ? '📚' : cat === 'Home & Kitchen' ? '🏠' : cat === 'Sports' ? '⚽' : cat === 'Beauty' ? '💄' : '🧸'}</span>
                   {cat}
                 </Link>
               ))}
-              
               <hr className="my-3" />
-              
               <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Help & Settings</h3>
-              <Link to="/account" onClick={() => setShowMobileMenu(false)} className="flex items-center gap-3 px-3 py-2.5 hover:bg-gray-100 rounded-lg text-sm text-gray-700">
-                <FaUser className="text-gray-400" /> Your Account
-              </Link>
-              <Link to="/orders" onClick={() => setShowMobileMenu(false)} className="flex items-center gap-3 px-3 py-2.5 hover:bg-gray-100 rounded-lg text-sm text-gray-700">
-                <FaBox className="text-gray-400" /> Your Orders
-              </Link>
-              <Link to="/wishlist" onClick={() => setShowMobileMenu(false)} className="flex items-center gap-3 px-3 py-2.5 hover:bg-gray-100 rounded-lg text-sm text-gray-700">
-                <FaHeart className="text-gray-400" /> Wishlist
-              </Link>
-              
+              <Link to="/account" onClick={() => setShowMobileMenu(false)} className="flex items-center gap-3 px-3 py-2.5 hover:bg-gray-100 rounded-lg text-sm text-gray-700"><FaUser className="text-gray-400" /> Your Account</Link>
+              <Link to="/orders" onClick={() => setShowMobileMenu(false)} className="flex items-center gap-3 px-3 py-2.5 hover:bg-gray-100 rounded-lg text-sm text-gray-700"><FaBox className="text-gray-400" /> Your Orders</Link>
+              <Link to="/wishlist" onClick={() => setShowMobileMenu(false)} className="flex items-center gap-3 px-3 py-2.5 hover:bg-gray-100 rounded-lg text-sm text-gray-700"><FaHeart className="text-gray-400" /> Wishlist</Link>
               {isAuthenticated && (
                 <>
                   <hr className="my-3" />
-                  <button
-                    onClick={() => { logout(); setShowMobileMenu(false); }}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-red-50 rounded-lg text-sm text-red-600 transition-colors"
-                  >
-                    <FaSignOutAlt /> Sign Out
-                  </button>
+                  <button onClick={() => { logout(); setShowMobileMenu(false); navigate('/'); }}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-red-50 rounded-lg text-sm text-red-600"><FaSignOutAlt /> Sign Out</button>
                 </>
               )}
             </div>

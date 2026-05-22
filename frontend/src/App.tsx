@@ -54,14 +54,13 @@ function App() {
             <Route path="register" element={<Register />} />
             <Route path="forgot-password" element={<ForgotPassword />} />
 
-            {/* Protected Routes */}
             <Route element={<ProtectedRoute />}>
               <Route path="checkout" element={<Checkout />} />
               <Route path="orders" element={<Orders />} />
               <Route path="orders/:id" element={<OrderDetail />} />
               <Route path="account" element={<Account />} />
               <Route path="wishlist" element={<Wishlist />} />
-              <Route path="admin" element={<AdminDashboard />} /> {/* ← ADDED */}
+              <Route path="admin" element={<AdminDashboard />} />  {/* ← ADD THIS LINE */}
             </Route>
 
             {/* 404 Route */}

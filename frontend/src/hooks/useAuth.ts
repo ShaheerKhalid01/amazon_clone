@@ -18,7 +18,9 @@ export function useAuth() {
     async (credentials: LoginCredentials) => {
       try {
         const result = await dispatch(loginUser(credentials)).unwrap();
-        toast.success(`Welcome back, ${result.user.firstName}!`);
+        // ✅ Safe access
+        const firstName = result?.user?.firstName || 'User';
+        toast.success(`Welcome back, ${firstName}!`);
         navigate('/');
         return result;
       } catch (error: any) {
@@ -44,7 +46,7 @@ export function useAuth() {
     user,
     isAuthenticated,
     loading,
-    error,
+    error: typeof error === 'string' ? error : null,
     login,
     logout: handleLogout,
     clearError: handleClearError,

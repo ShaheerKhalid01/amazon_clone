@@ -1,37 +1,42 @@
 import { useSelector, useDispatch } from 'react-redux';
 import { useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { RootState, AppDispatch } from '@store/index';
-import {
-  fetchCart,
-  addToCart as addToCartAction,
-  removeFromCart as removeFromCartAction,
-  updateCartItemQuantity as updateQuantityAction,
-  clearCart as clearCartAction,
-  updateLocalQuantity,
-} from '@store/slices/cartSlice';
+import { addToCart as addToCartAction, removeFromCart as removeFromCartAction, updateCartItemQuantity as updateQuantityAction, clearCart as clearCartAction, updateLocalQuantity } from '@store/slices/cartSlice';
 import type { AddToCartPayload } from '@/types/cart.types';
 import toast from 'react-hot-toast';
 
 export function useCart() {
   const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate();
   const { cart, loading, error, isUpdating } = useSelector((state: RootState) => state.cart);
-
-  const loadCart = useCallback(() => {
-    dispatch(fetchCart());
-  }, [dispatch]);
 
   const addToCart = useCallback(
     async (payload: AddToCartPayload) => {
+      // ✅ Check login first
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        toast.error('Please login to add items to cart');
+        navigate('/login');
+        return;
+      }
+
       try {
         await dispatch(addToCartAction(payload)).unwrap();
         toast.success('Added to cart!');
       } catch (error: any) {
         const msg = typeof error === 'string' ? error : error?.message || 'Failed to add item';
         toast.error(msg);
+
+        // ✅ If 401, redirect to login
+        if (msg.includes('401') || msg.includes('Unauthorized') || msg.includes('unauthorized')) {
+          toast.error('Session expired. Please login again.');
+          navigate('/login');
+        }
         throw error;
       }
     },
-    [dispatch]
+    [dispatch, navigate]
   );
 
   const removeFromCart = useCallback(
@@ -40,9 +45,8 @@ export function useCart() {
         await dispatch(removeFromCartAction(productId)).unwrap();
         toast.success('Removed from cart');
       } catch (error: any) {
-        const msg = typeof error === 'string' ? error : error?.message || 'Failed to remove item';
+        const msg = typeof error === 'string' ? error : error?.message || 'Failed';
         toast.error(msg);
-        throw error;
       }
     },
     [dispatch]
@@ -59,39 +63,19 @@ export function useCart() {
         await dispatch(updateQuantityAction({ productId, quantity })).unwrap();
       } catch (error: any) {
         dispatch(fetchCart());
-        const msg = typeof error === 'string' ? error : error?.message || 'Failed to update quantity';
-        toast.error(msg);
+        toast.error('Failed to update quantity');
       }
     },
     [dispatch, removeFromCart]
   );
 
-  const clearCart = useCallback(() => {
-    dispatch(clearCartAction());
-  }, [dispatch]);
+  const clearCart = useCallback(() => dispatch(clearCartAction()), [dispatch]);
 
   const itemCount = cart?.itemCount || 0;
   const cartTotal = cart?.total || 0;
 
-  const isInCart = useCallback(
-    (productId: string) => {
-      return cart?.items.some((item) => item.productId === productId) || false;
-    },
-    [cart]
-  );
-
   return {
-    cart,
-    loading,
-    error: typeof error === 'string' ? error : (error as any)?.message || null,
-    isUpdating,
-    itemCount,
-    cartTotal,
-    loadCart,
-    addToCart,
-    removeFromCart,
-    updateQuantity,
-    clearCart,
-    isInCart,
+    cart, loading, error, isUpdating, itemCount, cartTotal,
+    addToCart, removeFromCart, updateQuantity, clearCart,
   };
 }

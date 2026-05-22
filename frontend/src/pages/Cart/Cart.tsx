@@ -1,127 +1,77 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { useCart } from '@hooks/useCart';
-import CartItem from '@components/cart/CartItem/CartItem';
-import CartSummary from '@components/cart/CartSummary/CartSummary';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import Button from '@components/ui/Button/Button';
-import Spinner from '@components/ui/Spinner/Spinner';
 import { formatPrice } from '@utils/formatPrice';
-import { FaShoppingCart, FaArrowLeft, FaTrash } from 'react-icons/fa';
+import { FaShoppingCart, FaTrash } from 'react-icons/fa';
+import toast from 'react-hot-toast';
 
-/**
- * Cart Page Component
- */
 const Cart: React.FC = () => {
-  const {
-    cart,
-    loading,
-    isUpdating,
-    itemCount,
-    cartTotal,
-    updateQuantity,
-    removeFromCart,
-    clearCart,
-  } = useCart();
+  const navigate = useNavigate();
+  const [cartItems, setCartItems] = useState<any[]>([]);
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <Spinner size="lg" />
-      </div>
-    );
-  }
+  useEffect(() => {
+    const items = JSON.parse(localStorage.getItem('cartItems') || '[]');
+    setCartItems(items);
+  }, []);
 
-  // Empty Cart
-  if (!cart || cart.items.length === 0) {
+  const updateQuantity = (index: number, newQty: number) => {
+    if (newQty < 1) {
+      removeItem(index);
+      return;
+    }
+    const updated = [...cartItems];
+    updated[index].quantity = newQty;
+    setCartItems(updated);
+    localStorage.setItem('cartItems', JSON.stringify(updated));
+  };
+
+  const removeItem = (index: number) => {
+    const updated = cartItems.filter((_, i) => i !== index);
+    setCartItems(updated);
+    localStorage.setItem('cartItems', JSON.stringify(updated));
+    toast.success('Removed from cart');
+  };
+
+  const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const itemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+
+  if (cartItems.length === 0) {
     return (
-      <div className="max-w-amazon mx-auto px-4 py-12">
-        <div className="bg-white rounded-lg shadow-sm p-8 md:p-12">
-          <div className="flex items-center gap-4 mb-6">
-            <FaShoppingCart className="text-6xl text-gray-300" />
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Your Cart is Empty</h1>
-              <p className="text-gray-600 mt-2">
-                Discover deals and products you'll love.
-              </p>
-            </div>
-          </div>
-          
-          <div className="flex flex-col sm:flex-row gap-4">
-            <Link to="/products">
-              <Button variant="primary" size="lg">
-                Continue Shopping
-              </Button>
-            </Link>
-            <Link to="/deals">
-              <Button variant="secondary" size="lg">
-                Shop Today's Deals
-              </Button>
-            </Link>
-          </div>
-        </div>
+      <div className="max-w-4xl mx-auto px-4 py-20 text-center">
+        <FaShoppingCart size={64} className="mx-auto text-gray-300 mb-4" />
+        <h1 className="text-2xl font-bold mb-4">Your Cart is Empty</h1>
+        <Link to="/products"><Button variant="primary">Continue Shopping</Button></Link>
       </div>
     );
   }
 
   return (
-    <div className="max-w-amazon mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-          Shopping Cart
-          <span className="text-lg text-gray-500 ml-2">({itemCount} items)</span>
-        </h1>
-        <button
-          onClick={clearCart}
-          className="text-sm text-red-600 hover:text-red-700 font-medium flex items-center gap-1"
-        >
-          <FaTrash />
-          Clear Cart
-        </button>
+    <div className="max-w-4xl mx-auto px-4 py-8">
+      <h1 className="text-2xl font-bold mb-6">Shopping Cart ({itemCount} items)</h1>
+      
+      <div className="space-y-4">
+        {cartItems.map((item, i) => (
+          <div key={i} className="bg-white rounded-lg shadow p-4 flex gap-4 items-center">
+            <img src={item.image || 'https://via.placeholder.com/80'} alt={item.title} className="w-20 h-20 object-cover rounded" />
+            <div className="flex-1">
+              <h3 className="font-medium">{item.title}</h3>
+              <p className="text-sm text-gray-500">{item.brand}</p>
+              <p className="font-bold mt-1">{formatPrice(item.price)}</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button onClick={() => updateQuantity(i, item.quantity - 1)} className="px-3 py-1 border rounded">-</button>
+              <span className="w-8 text-center">{item.quantity}</span>
+              <button onClick={() => updateQuantity(i, item.quantity + 1)} className="px-3 py-1 border rounded">+</button>
+            </div>
+            <p className="font-bold w-24 text-right">{formatPrice(item.price * item.quantity)}</p>
+            <button onClick={() => removeItem(i)} className="text-red-500 hover:text-red-700"><FaTrash /></button>
+          </div>
+        ))}
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-8">
-        {/* Cart Items */}
-        <div className="flex-1">
-          <div className="bg-white rounded-lg shadow-sm divide-y">
-            {cart.items.map((item) => (
-              <CartItem
-                key={`${item.productId}-${item.variant?.id || 'default'}`}
-                item={item}
-                onUpdateQuantity={updateQuantity}
-                onRemove={removeFromCart}
-                isUpdating={isUpdating}
-              />
-            ))}
-          </div>
-
-          {/* Subtotal */}
-          <div className="mt-4 text-right">
-            <p className="text-sm text-gray-600">
-              Subtotal ({itemCount} items):{' '}
-              <span className="text-lg font-bold text-gray-900">
-                {formatPrice(cart.subtotal)}
-              </span>
-            </p>
-          </div>
-        </div>
-
-        {/* Cart Summary Sidebar */}
-        <div className="lg:w-80">
-          <div className="sticky top-24">
-            <CartSummary
-              cart={cart}
-              itemCount={itemCount}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Continue Shopping */}
-      <div className="mt-8 flex items-center gap-2">
-        <FaArrowLeft className="text-gray-400" />
-        <Link to="/products" className="text-amazon-blue hover:underline text-sm">
-          Continue Shopping
-        </Link>
+      <div className="bg-white rounded-lg shadow p-6 mt-6 text-right">
+        <p className="text-lg">Subtotal ({itemCount} items): <span className="font-bold">{formatPrice(subtotal)}</span></p>
+        <Button variant="primary" size="lg" className="mt-4" onClick={() => navigate('/checkout')}>Proceed to Checkout</Button>
       </div>
     </div>
   );

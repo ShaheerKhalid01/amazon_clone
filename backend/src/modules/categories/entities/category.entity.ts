@@ -1,22 +1,7 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  CreateDateColumn,
-  UpdateDateColumn,
-  Index,
-  Tree,
-  TreeChildren,
-  TreeParent,
-} from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, TreeChildren, TreeParent, Index } from 'typeorm';
 
-/**
- * Category Entity
- * Hierarchical category tree structure for product organization
- */
 @Entity('categories')
-@Tree('closure-table')
-@Index(['slug'], { unique: true })
+@Index(['slug'], { unique: true })  // ← Class level UNIQUE index
 export class Category {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -24,8 +9,8 @@ export class Category {
   @Column({ length: 150 })
   name: string;
 
-  @Column({ unique: true, length: 200 })
-  @Index()
+  @Column({ length: 200 })
+  // @Index()  ← COMMENT YA HATAO - class level already hai!
   slug: string;
 
   @Column({ type: 'text', nullable: true })
@@ -38,10 +23,10 @@ export class Category {
   icon?: string;
 
   @TreeChildren()
-  children?: Category[];
+  children: Category[];
 
   @TreeParent()
-  parent?: Category | null;
+  parent: Category;
 
   @Column({ nullable: true })
   parentId?: string;
@@ -56,18 +41,10 @@ export class Category {
   isFeatured: boolean;
 
   @Column({ type: 'simple-json', nullable: true })
-  metaData?: {
-    title?: string;
-    description?: string;
-    keywords?: string[];
-  };
+  metaData?: any;
 
   @Column({ type: 'simple-json', nullable: true })
-  filters?: {
-    specifications?: string[];
-    priceRange?: { min: number; max: number }[];
-    brands?: string[];
-  };
+  filters?: any;
 
   @Column({ default: 0 })
   productCount: number;

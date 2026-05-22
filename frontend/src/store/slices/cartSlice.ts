@@ -41,10 +41,18 @@ export const addToCart = createAsyncThunk(
   'cart/addToCart',
   async (payload: AddToCartPayload, { rejectWithValue }) => {
     try {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        return rejectWithValue('Please login first');
+      }
       const response = await cartService.addToCart(payload);
       return response;
     } catch (error: any) {
-      return rejectWithValue(error.message || 'Failed to add item to cart');
+      // ✅ Better error message
+      if (error?.response?.status === 401) {
+        return rejectWithValue('Session expired. Please login again.');
+      }
+      return rejectWithValue(error?.message || 'Failed to add item to cart');
     }
   }
 );
@@ -112,7 +120,7 @@ const cartSlice = createSlice({
         if (item) {
           item.quantity = action.payload.quantity;
           item.totalPrice = item.unitPrice * action.payload.quantity;
-          
+
           // Recalculate cart total
           state.cart.subtotal = state.cart.items.reduce(
             (sum, i) => sum + i.totalPrice,

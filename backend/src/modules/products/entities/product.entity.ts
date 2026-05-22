@@ -18,10 +18,6 @@ import {
   ProductAvailability,
 } from '@shared/enums';
 
-/**
- * Product Entity
- * Core product data model for the e-commerce platform
- */
 @Entity('products')
 @Index(['asin'], { unique: true })
 @Index(['category'])
@@ -32,7 +28,7 @@ export class Product {
   id: string;
 
   @Column({ unique: true, length: 10 })
-  asin: string; // Amazon Standard Identification Number
+  asin: string;
 
   @Column({ length: 500 })
   @Index({ fulltext: true })
@@ -42,7 +38,6 @@ export class Product {
   subtitle?: string;
 
   @Column({ length: 100 })
-  @Index()
   brand: string;
 
   @Column({ length: 100 })
@@ -60,12 +55,7 @@ export class Product {
   @Column({ type: 'text', nullable: true })
   technicalDetails?: string;
 
-  // Categorization
-  @Column({
-    type: 'simple-enum',
-    enum: ProductCategory,
-  })
-  @Index()
+  @Column({ type: 'simple-enum', enum: ProductCategory })
   category: ProductCategory;
 
   @Column({ length: 100 })
@@ -74,7 +64,6 @@ export class Product {
   @Column({ type: 'simple-json', default: '[]' })
   tags: string[];
 
-  // Pricing (denormalized for quick access)
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   basePrice: number;
 
@@ -93,74 +82,30 @@ export class Product {
   @Column({ default: 'USD', length: 3 })
   currency: string;
 
-  // Inventory
   @Column({ default: 0 })
   totalQuantity: number;
 
   @Column({ default: 0 })
   reservedQuantity: number;
 
-  @Column({
-    type: 'simple-enum',
-    enum: ProductCondition,
-    default: ProductCondition.NEW,
-  })
+  @Column({ type: 'simple-enum', enum: ProductCondition, default: ProductCondition.NEW })
   condition: ProductCondition;
 
-  @Column({
-    type: 'simple-enum',
-    enum: ProductAvailability,
-    default: ProductAvailability.IN_STOCK,
-  })
+  @Column({ type: 'simple-enum', enum: ProductAvailability, default: ProductAvailability.IN_STOCK })
   availability: ProductAvailability;
 
-  // Media
   @Column({ type: 'simple-json', default: '[]' })
-  images: {
-    id: string;
-    url: string;
-    thumbnailUrl: string;
-    altText: string;
-    isPrimary: boolean;
-    order: number;
-  }[];
+  images: { id: string; url: string; thumbnailUrl: string; altText: string; isPrimary: boolean; order: number }[];
 
   @Column({ type: 'simple-json', nullable: true })
-  videos?: {
-    id: string;
-    url: string;
-    thumbnailUrl: string;
-    title: string;
-    duration: number;
-    type: string;
-  }[];
+  videos?: { id: string; url: string; thumbnailUrl: string; title: string; duration: number; type: string }[];
 
-  // Dimensions
   @Column({ type: 'simple-json' })
-  dimensions: {
-    length: number;
-    width: number;
-    height: number;
-    weight: number;
-    unit: string;
-    weightUnit: string;
-  };
+  dimensions: { length: number; width: number; height: number; weight: number; unit: string; weightUnit: string };
 
-  // Shipping
   @Column({ type: 'simple-json' })
-  shipping: {
-    freeShipping: boolean;
-    freeShippingThreshold?: number;
-    shippingCost?: number;
-    estimatedDelivery: {
-      minDays: number;
-      maxDays: number;
-    };
-    shipsFrom: string;
-    internationalShipping: boolean;
-  };
+  shipping: { freeShipping: boolean; freeShippingThreshold?: number; shippingCost?: number; estimatedDelivery: { minDays: number; maxDays: number }; shipsFrom: string; internationalShipping: boolean };
 
-  // Reviews Summary (denormalized)
   @Column({ type: 'decimal', precision: 3, scale: 2, default: 0 })
   averageRating: number;
 
@@ -168,15 +113,8 @@ export class Product {
   totalReviews: number;
 
   @Column({ type: 'simple-json', default: '{}' })
-  ratingDistribution: {
-    1: number;
-    2: number;
-    3: number;
-    4: number;
-    5: number;
-  };
+  ratingDistribution: { 1: number; 2: number; 3: number; 4: number; 5: number };
 
-  // Amazon Features
   @Column({ default: false })
   isPrimeEligible: boolean;
 
@@ -216,16 +154,9 @@ export class Product {
   @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
   tradeInValue?: number;
 
-  // SEO
   @Column({ type: 'simple-json', nullable: true })
-  seo?: {
-    metaTitle: string;
-    metaDescription: string;
-    metaKeywords: string[];
-    ogImage?: string;
-  };
+  seo?: { metaTitle: string; metaDescription: string; metaKeywords: string[]; ogImage?: string };
 
-  // Seller Info
   @Column()
   sellerId: string;
 
@@ -235,14 +166,12 @@ export class Product {
   @Column({ type: 'decimal', precision: 3, scale: 2, nullable: true })
   sellerRating?: number;
 
-  // Status
   @Column({ default: true })
   isActive: boolean;
 
   @Column({ default: false })
   isDeleted: boolean;
 
-  // Timestamps
   @CreateDateColumn()
   @Index()
   createdAt: Date;
@@ -256,36 +185,20 @@ export class Product {
   @Column({ nullable: true })
   discontinuedDate?: Date;
 
-  // Relationships
-  @OneToMany(() => ProductVariant, (variant) => variant.product, {
-    cascade: true,
-    eager: false,
-  })
+  @OneToMany(() => ProductVariant, (variant) => variant.product, { cascade: true, eager: false })
   variants: ProductVariant[];
 
   @OneToMany(() => ProductReview, (review) => review.product)
   reviews: ProductReview[];
 
-  /**
-   * Get available quantity
-   */
   get availableQuantity(): number {
     return this.totalQuantity - this.reservedQuantity;
   }
 
-  /**
-   * Check if product is in stock
-   */
   get inStock(): boolean {
-    return (
-      this.availableQuantity > 0 &&
-      this.availability === ProductAvailability.IN_STOCK
-    );
+    return this.availableQuantity > 0 && this.availability === ProductAvailability.IN_STOCK;
   }
 
-  /**
-   * Get current price (sale or regular)
-   */
   get currentPrice(): number {
     return this.isOnSale && this.salePrice ? this.salePrice : this.basePrice;
   }
