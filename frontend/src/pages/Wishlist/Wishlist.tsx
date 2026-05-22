@@ -2,8 +2,6 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useDispatch } from 'react-redux';
-import { addToCart } from '@store/slices/cartSlice';
-import { removeFromWishlist } from '@store/slices/wishlistSlice';
 import Button from '@components/ui/Button/Button';
 import Spinner from '@components/ui/Spinner/Spinner';
 import Rating from '@components/ui/Rating/Rating';
