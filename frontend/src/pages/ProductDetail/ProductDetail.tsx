@@ -101,7 +101,7 @@ const handleBuyNow = () => {
     return;
   }
 
-  // ✅ Save buy now item to localStorage
+  // ✅ Save buy now item
   const buyNowItem = {
     productId: product.id,
     title: product.title,
@@ -112,7 +112,9 @@ const handleBuyNow = () => {
   };
   
   localStorage.setItem('buyNowItem', JSON.stringify(buyNowItem));
-  navigate('/checkout?buyNow=true');
+  
+  // ✅ Navigate to checkout
+  navigate('/checkout');
 };
 
   return (
