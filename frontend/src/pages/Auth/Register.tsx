@@ -22,77 +22,54 @@ const Register: React.FC = () => {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setRegisterError(null);
+  e.preventDefault();
+  setRegisterError(null);
 
-    if (formData.password !== formData.confirmPassword) {
-      setRegisterError('Passwords do not match!');
-      return;
-    }
+  if (formData.password !== formData.confirmPassword) {
+    setRegisterError('Passwords do not match!');
+    return;
+  }
 
-    if (formData.password.length < 6) {
-      setRegisterError('Password must be at least 6 characters!');
-      return;
-    }
+  setLoading(true);
 
-    setLoading(true);
+  try {
+    const response = await fetch('https://amazon-clone-pcrs.onrender.com/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(formData),
+    });
 
-    try {
-      // ✅ Build payload - remove empty phone
-      const payload: any = {
-        email: formData.email,
-        password: formData.password,
-        confirmPassword: formData.confirmPassword,
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-      };
+    const data = await response.json();
+    const result = data?.data || data;
+
+    if (response.ok && result?.accessToken) {
+      // ✅ SAVE TOKEN - same as login
+      localStorage.setItem('accessToken', result.accessToken);
+      localStorage.setItem('refreshToken', result.refreshToken || '');
+      localStorage.setItem('user', JSON.stringify(result.user));
+
+      toast.success(`Welcome, ${result.user?.firstName || 'User'}! Registration successful!`);
       
-      // Only add phone if not empty
-      if (formData.phoneNumber?.trim()) {
-        payload.phoneNumber = formData.phoneNumber.trim();
+      // ✅ Redirect based on role
+      if (result.user?.role === 'ADMIN') {
+        window.location.href = '/admin';
+      } else {
+        window.location.href = '/';
       }
-
-      console.log('📤 Sending payload:', payload);
-
-      const response = await fetch('https://amazon-clone-pcrs.onrender.com/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await response.json();
-      console.log('📥 Response:', data);
-
-      // ✅ Handle both response formats
-      const result = data?.data || data;
-
-      if (response.ok && result?.accessToken) {
-        localStorage.setItem('accessToken', result.accessToken);
-        localStorage.setItem('refreshToken', result.refreshToken || '');
-        localStorage.setItem('user', JSON.stringify(result.user));
-
-        toast.success(`Welcome, ${result.user?.firstName || 'User'}!`);
-        navigate('/');
-        return;
-      }
-
-      // ✅ Error handling
-      if (!response.ok) {
-        const errorMsg = Array.isArray(data?.message) 
-          ? data.message[0] 
-          : data?.message || data?.error || 'Registration failed';
-        setRegisterError(typeof errorMsg === 'string' ? errorMsg : JSON.stringify(errorMsg));
-        return;
-      }
-
-      setRegisterError('Registration failed - No token received');
-    } catch (error: any) {
-      console.error('❌ Register error:', error);
-      setRegisterError('Server error. Make sure backend is running on port 5000');
-    } finally {
-      setLoading(false);
+    } else {
+      const errorMsg = typeof data?.message === 'string' 
+        ? data.message 
+        : Array.isArray(data?.message) 
+        ? data.message[0] 
+        : 'Registration failed';
+      setRegisterError(errorMsg);
     }
-  };
+  } catch (error: any) {
+    setRegisterError('Server error. Make sure backend is running.');
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 py-12 px-4">
