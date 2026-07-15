@@ -7,13 +7,20 @@ const http = require('http');           // 👈 NAYA: Express ko http server mei
 const { Server } = require('socket.io'); // 👈 NAYA: Socket.io import
 
 const app = express();
-app.use(cors());
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+app.use(cors({
+  origin: [FRONTEND_URL, 'http://localhost:5173', 'http://localhost:3000'],
+  credentials: true,
+}));
 app.use(express.json());
 
 // 👇 NAYA: Express app ko http server mein wrap kiya (Socket.io ko isi server ki zaroorat hoti hai)
 const server = http.createServer(app);
 const io = new Server(server, {
-  cors: { origin: '*' }, // production mein apna frontend URL yahan dalein
+  cors: { 
+    origin: [FRONTEND_URL, 'http://localhost:5173', 'http://localhost:3000'],
+    credentials: true,
+  },
 });
 
 const JWT_SECRET = process.env.JWT_SECRET || 'my-secret-key-123';
