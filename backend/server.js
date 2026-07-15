@@ -253,8 +253,10 @@ app.post('/api/auth/login', async (req, res) => {
     const { email, password } = req.body;
 
     if (email === 'admin@amazonclone.com' && password === 'Admin@123') {
+      console.log('Admin login attempt, JWT_SECRET:', JWT_SECRET ? 'Set' : 'NOT SET');
       const token = jwt.sign({ id: 'admin-001', email, role: 'ADMIN' }, JWT_SECRET, { expiresIn: '15m' });
       const refreshToken = jwt.sign({ id: 'admin-001', email, role: 'ADMIN' }, JWT_SECRET, { expiresIn: '7d' });
+      console.log('Admin login successful');
       return res.json({
         success: true,
         data: {
