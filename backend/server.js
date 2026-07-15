@@ -293,6 +293,10 @@ app.post('/api/auth/login', async (req, res) => {
 // Health check Endpoint
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
+// Root health check for Render compatibility
+app.get('/health', (req, res) => res.json({ status: 'ok' }));
+app.get('/', (req, res) => res.json({ status: 'ok', message: 'Amazon Clone API is running' }));
+
 // Admin Middleware - verifies JWT and checks for ADMIN role
 const adminAuth = (req, res, next) => {
   const authHeader = req.headers.authorization;
