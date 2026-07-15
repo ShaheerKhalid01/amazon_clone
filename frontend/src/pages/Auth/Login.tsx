@@ -4,6 +4,8 @@ import Button from '@components/ui/Button/Button';
 import { FaAmazon } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
 const Login: React.FC = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
@@ -17,7 +19,7 @@ const Login: React.FC = () => {
     setLoading(true);
 
     try {
-      const response = await fetch('https://amazon-clone-pcrs.onrender.com/api/auth/login', {
+      const response = await fetch(`${API_BASE}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),

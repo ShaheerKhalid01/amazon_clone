@@ -4,6 +4,8 @@ import Button from '@components/ui/Button/Button';
 import { FaAmazon } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
 const Register: React.FC = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -33,7 +35,7 @@ const Register: React.FC = () => {
   setLoading(true);
 
   try {
-    const response = await fetch('https://amazon-clone-pcrs.onrender.com/api/auth/register', {
+    const response = await fetch(`${API_BASE}/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(formData),

@@ -141,12 +141,26 @@ services:
     networks:
       - app-network
 
+  # MongoDB Database
+  mongodb:
+    image: mongo:6-jammy
+    container_name: amazon-clone-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - app-network
+
 volumes:
   postgres_data:
     driver: local
   redis_data:
     driver: local
   pgadmin_data:
+    driver: local
+  mongodb_data:
     driver: local
 
 networks:

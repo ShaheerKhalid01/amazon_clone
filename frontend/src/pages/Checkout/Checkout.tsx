@@ -5,11 +5,13 @@ import { formatPrice } from '@utils/formatPrice';
 import { FaLock } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
 const Checkout: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const isBuyNow = searchParams.get('buyNow') === 'true';
-  
+
   // ✅ Simple auth check - localStorage
   const token = localStorage.getItem('accessToken');
   const isAuthenticated = !!token;
@@ -25,7 +27,9 @@ const Checkout: React.FC = () => {
 
   // Get buy now item
   const buyNowItem = isBuyNow ? JSON.parse(localStorage.getItem('buyNowItem') || 'null') : null;
-  const items = buyNowItem ? [buyNowItem] : [];
+  // 👇 NAYA: agar buy-now nahi hai to normal cart se items lein (real checkout flow)
+  const cartItems = !isBuyNow ? JSON.parse(localStorage.getItem('cartItems') || '[]') : [];
+  const items = buyNowItem ? [buyNowItem] : cartItems;
 
   const subtotal = items.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0);
   const shippingCost = subtotal > 25 ? 0 : 5.99;
@@ -36,15 +40,53 @@ const Checkout: React.FC = () => {
     if (!isAuthenticated) navigate('/login');
   }, [isAuthenticated, navigate]);
 
+  // 👇 UPDATED: ab real backend API ko call karta hai, sirf fake delay nahi
   const handlePlaceOrder = async () => {
+    if (items.length === 0) {
+      toast.error('Your cart is empty');
+      return;
+    }
+
     setIsProcessing(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const res = await fetch(`${API_BASE}/orders`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          items: items.map((item: any) => ({
+            productId: item.productId,
+            title: item.title,
+            image: item.image,
+            quantity: item.quantity,
+            price: item.price,
+          })),
+          shippingAddress: shippingData,
+          subtotal,
+          shippingCost,
+          tax,
+          total,
+        }),
+      });
+
+      const json = await res.json();
+
+      if (!res.ok || !json.success) {
+        toast.error(json.message || 'Failed to place order');
+        return;
+      }
+
+      // Order MongoDB mein save ho gaya — ab local cart/buyNow data clear kar dein
       localStorage.removeItem('buyNowItem');
+      if (!isBuyNow) localStorage.removeItem('cartItems');
+      window.dispatchEvent(new CustomEvent('cartUpdated', { detail: { itemCount: 0 } }));
+
       toast.success('Order placed successfully!');
       navigate('/orders');
     } catch (error: any) {
-      toast.error('Failed to place order');
+      toast.error('Could not connect to the server');
     } finally {
       setIsProcessing(false);
     }
@@ -86,16 +128,20 @@ const Checkout: React.FC = () => {
           {/* Items */}
           <div className="bg-white rounded-lg shadow-sm p-6">
             <h2 className="text-lg font-semibold mb-4">3. Order Items</h2>
-            {items.map((item: any, i: number) => (
-              <div key={i} className="flex items-center gap-4 py-3 border-b last:border-0">
-                <img src={item.image || 'https://via.placeholder.com/80'} alt={item.title} className="w-16 h-16 object-cover rounded-lg" />
-                <div className="flex-1">
-                  <p className="font-medium text-sm">{item.title}</p>
-                  <p className="text-xs text-gray-500">Qty: {item.quantity}</p>
+            {items.length === 0 ? (
+              <p className="text-sm text-gray-400">Your cart is empty.</p>
+            ) : (
+              items.map((item: any, i: number) => (
+                <div key={i} className="flex items-center gap-4 py-3 border-b last:border-0">
+                  <img src={item.image || 'https://via.placeholder.com/80'} alt={item.title} className="w-16 h-16 object-cover rounded-lg" />
+                  <div className="flex-1">
+                    <p className="font-medium text-sm">{item.title}</p>
+                    <p className="text-xs text-gray-500">Qty: {item.quantity}</p>
+                  </div>
+                  <p className="font-bold">{formatPrice(item.price * item.quantity)}</p>
                 </div>
-                <p className="font-bold">{formatPrice(item.price * item.quantity)}</p>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
 
@@ -110,7 +156,7 @@ const Checkout: React.FC = () => {
               <hr />
               <div className="flex justify-between text-lg font-bold"><span>Total</span><span className="text-amazon-red">{formatPrice(total)}</span></div>
             </div>
-            <Button variant="primary" size="lg" fullWidth className="mt-6" onClick={handlePlaceOrder} loading={isProcessing}>
+            <Button variant="primary" size="lg" fullWidth className="mt-6" onClick={handlePlaceOrder} loading={isProcessing} disabled={items.length === 0}>
               <FaLock className="mr-2" />{isProcessing ? 'Placing Order...' : 'Place Order'}
             </Button>
           </div>

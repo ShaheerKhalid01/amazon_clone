@@ -1,12 +1,14 @@
 import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';   // 👈 CHANGE 1: naya import
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly jwtService: JwtService,
     private readonly usersService: UsersService,
+    private readonly eventEmitter: EventEmitter2,          // 👈 CHANGE 2: constructor mein add
   ) {}
 
   async login(loginDto: any) {
@@ -40,6 +42,9 @@ export class AuthService {
     if (existing) throw new BadRequestException('Email already registered');
 
     const user = await this.usersService.create({ ...userData, password, role: registerDto.role || 'CUSTOMER' });
+
+    this.eventEmitter.emit('user.registered', { userId: user.id });   // 👈 CHANGE 3
+
     const payload = { sub: user.id, email: user.email, role: user.role || 'CUSTOMER' };
     return {
       accessToken: this.jwtService.sign(payload),

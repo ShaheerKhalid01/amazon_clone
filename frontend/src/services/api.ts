@@ -1,11 +1,13 @@
 import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
 
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
 class ApiService {
   private api: AxiosInstance;
 
   constructor() {
     this.api = axios.create({
-      baseURL: 'https://amazon-clone-pcrs.onrender.com/api',
+      baseURL: API_BASE,
       timeout: 15000,
       headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
     });

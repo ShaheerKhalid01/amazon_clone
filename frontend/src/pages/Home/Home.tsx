@@ -1,14 +1,69 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import ProductCard from '@components/product/ProductCard/ProductCard';
 import Button from '@components/ui/Button/Button';
-import { mockProducts, mockCategories } from '@services/mockData';
+import { mockCategories } from '@services/mockData';
+import { FaSpinner } from 'react-icons/fa';
+
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
+// ── Helper: MongoDB product ko ProductCard ke expected shape mein convert karta hai ──
+const mapToCardShape = (product: any) => {
+  const currentPrice = product.salePrice || product.basePrice || 0;
+  const savingsPercentage = product.salePrice && product.basePrice
+    ? Math.round(((product.basePrice - product.salePrice) / product.basePrice) * 100)
+    : 0;
+
+  return {
+    id: product._id,
+    asin: product._id,
+    title: product.title,
+    brand: product.brand,
+    primaryImage: { url: product.image, altText: product.title },
+    pricing: {
+      currentPrice,
+      originalPrice: product.salePrice ? product.basePrice : undefined,
+      savings: savingsPercentage,
+      savingsPercentage,
+    },
+    rating: product.rating || 0,
+    reviewCount: product.totalReviews || 0,
+    isPrimeEligible: true,
+    isBestSeller: product.isBestSeller,
+    isAmazonChoice: false,
+    badges: [],
+    availability: 'IN_STOCK',
+    deliveryInfo: { fastestDays: 3, freeShipping: true },
+    category: 'ELECTRONICS',
+    subCategory: '',
+  };
+};
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
+  const [allProducts, setAllProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const deals = mockProducts.filter(p => p.pricing?.isOnSale).slice(0, 8);
-const featuredProducts = mockProducts.filter(p => p.isBestSeller).slice(0, 8);
+  // ── Real products fetch karein MongoDB se ──────────────────────────────
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/products`, { cache: 'no-store' });
+        const json = await res.json();
+        if (json.success) {
+          setAllProducts(json.data.products);
+        }
+      } catch (err) {
+        console.error('Failed to load products:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProducts();
+  }, []);
+
+  const deals = allProducts.filter(p => p.salePrice && p.salePrice < p.basePrice).slice(0, 8);
+  const featuredProducts = allProducts.filter(p => p.isBestSeller).slice(0, 8);
   const categories = mockCategories;
 
   const quickLinks = [
@@ -71,83 +126,58 @@ const featuredProducts = mockProducts.filter(p => p.isBestSeller).slice(0, 8);
         </div>
       </section>
 
-      {/* ========== TODAY'S DEALS ========== */}
-      <section className="bg-red-50 py-12">
-        <div className="max-w-amazon mx-auto px-4">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h2 className="text-2xl md:text-3xl font-bold text-gray-900">🔥 Today's Deals</h2>
-              <p className="text-gray-600 mt-2">Limited time offers on popular products</p>
-            </div>
-            <Link to="/deals" className="text-amazon-blue hover:underline text-sm">See all deals →</Link>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {deals.map((product: any) => (
-              <ProductCard key={product.id} product={{
-                id: product.id,
-                asin: product.asin,
-                title: product.title,
-                brand: product.brand,
-                primaryImage: product.images[0],
-                pricing: {
-                  currentPrice: product.pricing.salePrice || product.pricing.basePrice,
-                  originalPrice: product.pricing.compareAtPrice,
-                  savings: product.pricing.savingsPercentage,
-                  savingsPercentage: product.pricing.savingsPercentage,
-                },
-                rating: product.rating,
-                reviewCount: product.reviewCount,
-                isPrimeEligible: product.isPrimeEligible,
-                isBestSeller: product.isBestSeller,
-                isAmazonChoice: product.isAmazonChoice,
-                badges: product.badges,
-                availability: product.availability,
-                deliveryInfo: { fastestDays: 3, freeShipping: product.shipping?.freeShipping },
-                category: product.category,
-                subCategory: product.subCategory,
-              }} />
-            ))}
-          </div>
+      {/* Loading state while fetching real products */}
+      {loading ? (
+        <div className="flex items-center justify-center py-20 text-gray-400">
+          <FaSpinner className="animate-spin mr-2" size={24} /> Loading products...
         </div>
-      </section>
+      ) : (
+        <>
+          {/* ========== TODAY'S DEALS ========== */}
+          {deals.length > 0 && (
+            <section className="bg-red-50 py-12">
+              <div className="max-w-amazon mx-auto px-4">
+                <div className="flex items-center justify-between mb-8">
+                  <div>
+                    <h2 className="text-2xl md:text-3xl font-bold text-gray-900">🔥 Today's Deals</h2>
+                    <p className="text-gray-600 mt-2">Limited time offers on popular products</p>
+                  </div>
+                  <Link to="/deals" className="text-amazon-blue hover:underline text-sm">See all deals →</Link>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                  {deals.map((product: any) => (
+                    <ProductCard key={product._id} product={mapToCardShape(product)} />
+                  ))}
+                </div>
+              </div>
+            </section>
+          )}
 
-      {/* ========== FEATURED PRODUCTS ========== */}
-      <section className="max-w-amazon mx-auto px-4 py-12">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-900">Featured Products</h2>
-            <p className="text-gray-600 mt-2">Top picks for you</p>
-          </div>
-          <Link to="/products?sort=bestseller" className="text-amazon-blue hover:underline text-sm">See more →</Link>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {featuredProducts.map((product: any) => (
-            <ProductCard key={product.id} product={{
-              id: product.id,
-              asin: product.asin,
-              title: product.title,
-              brand: product.brand,
-              primaryImage: product.images[0],
-              pricing: {
-                currentPrice: product.pricing.salePrice || product.pricing.basePrice,
-                originalPrice: product.pricing.compareAtPrice,
-                savings: product.pricing.savingsPercentage,
-                savingsPercentage: product.pricing.savingsPercentage,
-              },
-              rating: product.rating,
-              reviewCount: product.reviewCount,
-              isPrimeEligible: product.isPrimeEligible,
-              isBestSeller: product.isBestSeller,
-              isAmazonChoice: product.isAmazonChoice,
-              badges: product.badges,
-              availability: product.availability,
-              deliveryInfo: { fastestDays: 3, freeShipping: product.shipping?.freeShipping },
-              category: product.category,
-              subCategory: product.subCategory,
-            }} />
-          ))}
-        </div>
-      </section>
+          {/* ========== FEATURED PRODUCTS ========== */}
+          {featuredProducts.length > 0 && (
+            <section className="max-w-amazon mx-auto px-4 py-12">
+              <div className="flex items-center justify-between mb-8">
+                <div>
+                  <h2 className="text-2xl md:text-3xl font-bold text-gray-900">Featured Products</h2>
+                  <p className="text-gray-600 mt-2">Top picks for you</p>
+                </div>
+                <Link to="/products?sort=bestseller" className="text-amazon-blue hover:underline text-sm">See more →</Link>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                {featuredProducts.map((product: any) => (
+                  <ProductCard key={product._id} product={mapToCardShape(product)} />
+                ))}
+              </div>
+            </section>
+          )}
+
+          {allProducts.length === 0 && (
+            <div className="text-center py-20 text-gray-400">
+              <p>No products available yet. Check back soon!</p>
+            </div>
+          )}
+        </>
+      )}
 
       {/* ========== PRIME BANNER ========== */}
       <section className="bg-amazon-blue text-white py-12">

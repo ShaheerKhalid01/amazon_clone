@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Rating from '@components/ui/Rating/Rating';
 import { formatPrice } from '@utils/formatPrice';
@@ -13,6 +13,12 @@ interface ProductCardProps {
 const ProductCard: React.FC<ProductCardProps> = ({ product, variant = 'grid' }) => {
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
+
+  // 👇 NAYA: Page load hote hi check karein ke ye product pehle se wishlist mein hai ya nahi
+  useEffect(() => {
+    const wishlist = JSON.parse(localStorage.getItem('wishlistItems') || '[]');
+    setIsWishlisted(wishlist.some((w: any) => w.productId === product.id));
+  }, [product.id]);
 
   const currentPrice = product.pricing?.currentPrice || product.pricing?.basePrice || 0;
   const originalPrice = product.pricing?.originalPrice || product.pricing?.compareAtPrice;
@@ -45,12 +51,34 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, variant = 'grid' }) 
     setTimeout(() => setIsAddingToCart(false), 500);
   };
 
-  // Wishlist Toggle
+  // 👇 UPDATED: Wishlist Toggle — ab real localStorage mein save/remove karta hai
   const handleWishlist = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+
+    const wishlist = JSON.parse(localStorage.getItem('wishlistItems') || '[]');
+
+    if (isWishlisted) {
+      const updated = wishlist.filter((w: any) => w.productId !== product.id);
+      localStorage.setItem('wishlistItems', JSON.stringify(updated));
+      toast.success('Removed from wishlist');
+    } else {
+      wishlist.push({
+        productId: product.id,
+        title: product.title,
+        brand: product.brand,
+        image: product.primaryImage?.url || '',
+        price: currentPrice,
+        originalPrice: originalPrice,
+        rating: product.rating,
+        reviewCount: product.reviewCount,
+        addedAt: new Date().toISOString(),
+      });
+      localStorage.setItem('wishlistItems', JSON.stringify(wishlist));
+      toast.success('Added to wishlist!');
+    }
+
     setIsWishlisted(!isWishlisted);
-    toast.success(isWishlisted ? 'Removed from wishlist' : 'Added to wishlist!');
   };
 
   // ========== LIST VIEW ==========
@@ -134,7 +162,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, variant = 'grid' }) 
           {product.title}
         </h3>
         <p className="text-xs text-gray-500 mt-1">{product.brand}</p>
-        
+
         {/* Rating */}
         <div className="mt-1.5">
           <Rating rating={product.rating || 0} count={product.reviewCount} size="sm" showValue={false} />

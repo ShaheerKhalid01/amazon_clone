@@ -41,6 +41,7 @@
 }
 
 @layer components {
+
   /* Amazon Button Styles */
   .btn-amazon {
     background-color: var(--color-amazon-orange);
@@ -50,6 +51,7 @@
     border-radius: 9999px;
     transition: all 0.2s;
   }
+
   .btn-amazon:hover {
     background-color: var(--color-amazon-orange-dark);
   }
@@ -62,6 +64,7 @@
     border-radius: 9999px;
     transition: all 0.2s;
   }
+
   .btn-amazon-secondary:hover {
     background-color: var(--color-gray-300);
   }
@@ -72,6 +75,7 @@
     transition: color 0.2s;
     cursor: pointer;
   }
+
   .link-amazon:hover {
     color: var(--color-amazon-blue-dark);
     text-decoration: underline;
@@ -84,6 +88,7 @@
     box-shadow: var(--shadow-amazon);
     transition: all 0.2s;
   }
+
   .card-amazon:hover {
     box-shadow: var(--shadow-amazon-hover);
   }
@@ -93,12 +98,14 @@
     color: var(--color-amazon-dark-gray);
   }
 }
+
 /* Hide scrollbar for sub-nav */
 @layer utilities {
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
@@ -108,6 +115,7 @@
 .search-suggestion {
   border-left: 3px solid transparent;
 }
+
 .search-suggestion:hover {
   border-left-color: #FF9900;
   background-color: #fef7ec;
@@ -115,9 +123,17 @@
 
 /* Smooth animations */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-5px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
+
 .animate-fade-in {
   animation: fadeIn 0.2s ease-out;
 }
