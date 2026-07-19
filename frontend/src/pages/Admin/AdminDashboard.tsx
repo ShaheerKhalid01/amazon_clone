@@ -5,7 +5,30 @@ import { formatPrice } from '@utils/formatPrice';
 import toast from 'react-hot-toast';
 import { io, Socket } from 'socket.io-client';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const getApiBaseUrl = () => {
+  if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
+  if (typeof window !== 'undefined') {
+    const currentOrigin = window.location.origin;
+    
+    // Local development
+    if (currentOrigin.includes('localhost') || currentOrigin.includes('127.0.0.1')) {
+      return 'http://localhost:5000/api';
+    }
+    
+    // Render deployment - use the backend Render URL
+    if (currentOrigin.includes('onrender.com')) {
+      // Extract the app name from the frontend URL and construct backend URL
+      const appName = currentOrigin.split('//')[1].split('.')[0];
+      return `https://${appName}-backend.onrender.com/api`;
+    }
+    
+    // Default to same-origin API
+    return `${currentOrigin}/api`;
+  }
+  return 'http://localhost:5000/api';
+};
+
+const API_BASE = getApiBaseUrl();
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
