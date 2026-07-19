@@ -11,19 +11,9 @@ import DeliveryInfo from '@components/common/DeliveryInfo/DeliveryInfo';
 import StockIndicator from '@components/common/StockIndicator/StockIndicator';
 import { FaShoppingCart, FaHeart, FaRegHeart, FaShare, FaShieldAlt, FaUndo, FaTruck, FaChevronRight, FaSpinner } from 'react-icons/fa';
 import toast from 'react-hot-toast';
+import { getApiUrl } from '@utils/apiBase';
 
-const getApiBaseUrl = () => {
-  if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
-  if (typeof window !== 'undefined') {
-    const currentOrigin = window.location.origin;
-    return currentOrigin.includes('localhost') || currentOrigin.includes('127.0.0.1')
-      ? 'http://localhost:5000/api'
-      : `${currentOrigin}/api`;
-  }
-  return 'http://localhost:5000/api';
-};
-
-const API_BASE = getApiBaseUrl();
+const API_BASE = getApiUrl('');
 
 // ── Helper: MongoDB ka simple product document ko is page ke expected (rich) shape mein convert karta hai ──
 // Humara DB schema basic hai (title, basePrice, image string, rating) — lekin ye UI zyada detailed

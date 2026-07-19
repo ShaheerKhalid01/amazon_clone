@@ -2,19 +2,9 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import ProductCard from '@components/product/ProductCard/ProductCard';
 import { FaSpinner } from 'react-icons/fa';
+import { getApiUrl } from '@utils/apiBase';
 
-const getApiBaseUrl = () => {
-  if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
-  if (typeof window !== 'undefined') {
-    const currentOrigin = window.location.origin;
-    return currentOrigin.includes('localhost') || currentOrigin.includes('127.0.0.1')
-      ? 'http://localhost:5000/api'
-      : `${currentOrigin}/api`;
-  }
-  return 'http://localhost:5000/api';
-};
-
-const API_BASE = getApiBaseUrl();
+const API_BASE = getApiUrl('');
 
 const Deals: React.FC = () => {
   // ── Real products fetch karein MongoDB se ──────────────────────────────

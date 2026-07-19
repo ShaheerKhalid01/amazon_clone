@@ -12,25 +12,30 @@ const app = express();
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 const frontendDistPath = path.resolve(__dirname, '../frontend/dist');
 const frontendIndexPath = path.join(frontendDistPath, 'index.html');
+const allowedOrigins = new Set([
+  FRONTEND_URL,
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+]);
 app.use(cors({
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
-    
-    // Allow localhost for development
-    if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+
+    if (allowedOrigins.has(origin)) {
       return callback(null, true);
     }
-    
-    // Allow the configured frontend URL
-    if (FRONTEND_URL && origin === FRONTEND_URL) {
+
+    if (origin.endsWith('.onrender.com') || origin.endsWith('.netlify.app') || origin.endsWith('.vercel.app')) {
       return callback(null, true);
     }
-    
-    // For production, allow all origins (you can restrict this to specific domains)
+
     callback(null, true);
   },
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 app.use(express.json());
 
@@ -41,25 +46,18 @@ if (fs.existsSync(frontendDistPath)) {
 // 👇 NAYA: Express app ko http server mein wrap kiya (Socket.io ko isi server ki zaroorat hoti hai)
 const server = http.createServer(app);
 const io = new Server(server, {
-  cors: { 
+  cors: {
     origin: function (origin, callback) {
-      // Allow requests with no origin
       if (!origin) return callback(null, true);
-      
-      // Allow localhost for development
-      if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+      if (allowedOrigins.has(origin)) return callback(null, true);
+      if (origin.endsWith('.onrender.com') || origin.endsWith('.netlify.app') || origin.endsWith('.vercel.app')) {
         return callback(null, true);
       }
-      
-      // Allow the configured frontend URL
-      if (FRONTEND_URL && origin === FRONTEND_URL) {
-        return callback(null, true);
-      }
-      
-      // For production, allow all origins
       callback(null, true);
     },
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
   },
 });
 

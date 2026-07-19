@@ -4,8 +4,9 @@ import { formatPrice } from '@utils/formatPrice';
 import { FaSpinner } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import { io, Socket } from 'socket.io-client';
+import { getApiUrl } from '@utils/apiBase';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_BASE = getApiUrl('');
 
 // ── Order status ko friendly label/icon mein convert karta hai ──────────
 const statusDisplay: Record<string, { label: string; className: string; icon: string }> = {

@@ -4,8 +4,9 @@ import Button from '@components/ui/Button/Button';
 import { formatPrice } from '@utils/formatPrice';
 import { FaLock } from 'react-icons/fa';
 import toast from 'react-hot-toast';
+import { getApiUrl } from '@utils/apiBase';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_BASE = getApiUrl('');
 
 const Checkout: React.FC = () => {
   const navigate = useNavigate();
