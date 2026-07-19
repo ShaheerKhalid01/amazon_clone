@@ -3,16 +3,24 @@ const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
-const http = require('http');           // 👈 NAYA: Express ko http server mein wrap karne ke liye
-const { Server } = require('socket.io'); // 👈 NAYA: Socket.io import
+const http = require('http');
+const path = require('path');
+const fs = require('fs');
+const { Server } = require('socket.io');
 
 const app = express();
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+const frontendDistPath = path.resolve(__dirname, '../frontend/dist');
+const frontendIndexPath = path.join(frontendDistPath, 'index.html');
 app.use(cors({
   origin: [FRONTEND_URL, 'http://localhost:5173', 'http://localhost:3000'],
   credentials: true,
 }));
 app.use(express.json());
+
+if (fs.existsSync(frontendDistPath)) {
+  app.use(express.static(frontendDistPath));
+}
 
 // 👇 NAYA: Express app ko http server mein wrap kiya (Socket.io ko isi server ki zaroorat hoti hai)
 const server = http.createServer(app);
@@ -297,7 +305,20 @@ app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
 // Root health check for Render compatibility
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
-app.get('/', (req, res) => res.json({ status: 'ok', message: 'Amazon Clone API is running' }));
+
+if (fs.existsSync(frontendIndexPath)) {
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api') || req.path.startsWith('/health')) {
+      return next();
+    }
+    if (req.path.includes('.')) {
+      return next();
+    }
+    res.sendFile(frontendIndexPath);
+  });
+} else {
+  app.get('/', (req, res) => res.json({ status: 'ok', message: 'Amazon Clone API is running' }));
+}
 
 // Admin Middleware - verifies JWT and checks for ADMIN role
 const adminAuth = (req, res, next) => {
