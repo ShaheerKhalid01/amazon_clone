@@ -302,6 +302,28 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
+// Refresh Token Endpoint
+app.post('/api/auth/refresh', async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+    if (!refreshToken) {
+      return res.status(400).json({ success: false, message: 'Refresh token is required' });
+    }
+
+    const decoded = jwt.verify(refreshToken, JWT_SECRET);
+    const newAccessToken = jwt.sign(
+      { id: decoded.id, email: decoded.email, role: decoded.role },
+      JWT_SECRET,
+      { expiresIn: '15m' }
+    );
+
+    res.json({ success: true, accessToken: newAccessToken });
+  } catch (error) {
+    console.error('Refresh token error:', error);
+    res.status(401).json({ success: false, message: 'Invalid or expired refresh token' });
+  }
+});
+
 // Health check Endpoint
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 

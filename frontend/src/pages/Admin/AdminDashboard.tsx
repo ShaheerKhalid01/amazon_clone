@@ -84,18 +84,32 @@ const AdminDashboard: React.FC = () => {
     setStatsLoading(true);
     try {
       let token = localStorage.getItem('accessToken');
+      
+      // Add timeout for Render deployment
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
+      
       let res = await fetch(`${API_BASE}/admin/dashboard`, {
         headers: { Authorization: `Bearer ${token}` },
         cache: 'no-store',
+        signal: controller.signal,
       });
+
+      clearTimeout(timeoutId);
 
       if (res.status === 401 || res.status === 403) {
         const newToken = await handleAuthError();
         if (newToken) {
+          const retryController = new AbortController();
+          const retryTimeoutId = setTimeout(() => retryController.abort(), 15000);
+          
           res = await fetch(`${API_BASE}/admin/dashboard`, {
             headers: { Authorization: `Bearer ${newToken}` },
             cache: 'no-store',
+            signal: retryController.signal,
           });
+          
+          clearTimeout(retryTimeoutId);
         } else {
           return;
         }
@@ -107,8 +121,14 @@ const AdminDashboard: React.FC = () => {
       } else {
         toast.error(json.message || 'Failed to load dashboard stats');
       }
-    } catch (err) {
-      toast.error('Could not connect to the server');
+    } catch (err: any) {
+      if (err.name === 'AbortError') {
+        console.error('Dashboard stats fetch timed out');
+        toast.error('Request timed out. Please try again.');
+      } else {
+        console.error('Dashboard stats fetch error:', err);
+        toast.error('Could not connect to the server');
+      }
     } finally {
       setStatsLoading(false);
     }
@@ -119,16 +139,30 @@ const AdminDashboard: React.FC = () => {
     setUsersLoading(true);
     try {
       let token = localStorage.getItem('accessToken');
+      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
+      
       const res = await fetch(`${API_BASE}/admin/users`, {
         headers: { Authorization: `Bearer ${token}` },
+        signal: controller.signal,
       });
+
+      clearTimeout(timeoutId);
 
       if (res.status === 401 || res.status === 403) {
         const newToken = await handleAuthError();
         if (newToken) {
+          const retryController = new AbortController();
+          const retryTimeoutId = setTimeout(() => retryController.abort(), 15000);
+          
           const retryRes = await fetch(`${API_BASE}/admin/users`, {
             headers: { Authorization: `Bearer ${newToken}` },
+            signal: retryController.signal,
           });
+          
+          clearTimeout(retryTimeoutId);
+          
           const json = await retryRes.json();
           if (json.success) {
             setUsers(json.data.users);
@@ -145,8 +179,14 @@ const AdminDashboard: React.FC = () => {
       } else {
         toast.error(json.message || 'Failed to load users');
       }
-    } catch (err) {
-      toast.error('Could not connect to the server');
+    } catch (err: any) {
+      if (err.name === 'AbortError') {
+        console.error('Users fetch timed out');
+        toast.error('Request timed out. Please try again.');
+      } else {
+        console.error('Users fetch error:', err);
+        toast.error('Could not connect to the server');
+      }
     } finally {
       setUsersLoading(false);
     }
@@ -157,16 +197,30 @@ const AdminDashboard: React.FC = () => {
     setProductsLoading(true);
     try {
       let token = localStorage.getItem('accessToken');
+      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
+      
       const res = await fetch(`${API_BASE}/admin/products`, {
         headers: { Authorization: `Bearer ${token}` },
+        signal: controller.signal,
       });
+
+      clearTimeout(timeoutId);
 
       if (res.status === 401 || res.status === 403) {
         const newToken = await handleAuthError();
         if (newToken) {
+          const retryController = new AbortController();
+          const retryTimeoutId = setTimeout(() => retryController.abort(), 15000);
+          
           const retryRes = await fetch(`${API_BASE}/admin/products`, {
             headers: { Authorization: `Bearer ${newToken}` },
+            signal: retryController.signal,
           });
+          
+          clearTimeout(retryTimeoutId);
+          
           const json = await retryRes.json();
           if (json.success) {
             setProducts(json.data.products);
@@ -183,8 +237,14 @@ const AdminDashboard: React.FC = () => {
       } else {
         toast.error(json.message || 'Failed to load products');
       }
-    } catch (err) {
-      toast.error('Could not connect to the server');
+    } catch (err: any) {
+      if (err.name === 'AbortError') {
+        console.error('Products fetch timed out');
+        toast.error('Request timed out. Please try again.');
+      } else {
+        console.error('Products fetch error:', err);
+        toast.error('Could not connect to the server');
+      }
     } finally {
       setProductsLoading(false);
     }
@@ -203,16 +263,30 @@ const AdminDashboard: React.FC = () => {
     setOrdersLoading(true);
     try {
       let token = localStorage.getItem('accessToken');
+      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
+      
       const res = await fetch(`${API_BASE}/admin/orders`, {
         headers: { Authorization: `Bearer ${token}` },
+        signal: controller.signal,
       });
+
+      clearTimeout(timeoutId);
 
       if (res.status === 401 || res.status === 403) {
         const newToken = await handleAuthError();
         if (newToken) {
+          const retryController = new AbortController();
+          const retryTimeoutId = setTimeout(() => retryController.abort(), 15000);
+          
           const retryRes = await fetch(`${API_BASE}/admin/orders`, {
             headers: { Authorization: `Bearer ${newToken}` },
+            signal: retryController.signal,
           });
+          
+          clearTimeout(retryTimeoutId);
+          
           const json = await retryRes.json();
           if (json.success) setOrders(json.data.orders);
         }
@@ -225,8 +299,14 @@ const AdminDashboard: React.FC = () => {
       } else {
         toast.error(json.message || 'Failed to load orders');
       }
-    } catch (err) {
-      toast.error('Could not connect to the server');
+    } catch (err: any) {
+      if (err.name === 'AbortError') {
+        console.error('Orders fetch timed out');
+        toast.error('Request timed out. Please try again.');
+      } else {
+        console.error('Orders fetch error:', err);
+        toast.error('Could not connect to the server');
+      }
     } finally {
       setOrdersLoading(false);
     }
@@ -269,23 +349,56 @@ const AdminDashboard: React.FC = () => {
 
     // Phir WebSocket connect karein taake future updates automatically aayein
     const token = localStorage.getItem('accessToken');
-    const socket: Socket = io(`${API_BASE.replace('/api', '')}/admin`, {
-      auth: { token },
-    });
+    let socket: Socket | null = null;
+    let pollingInterval: number | null = null;
 
-    // Jab bhi backend "dashboard:update" event bheje, stats turant refresh ho jayein
-    socket.on('dashboard:update', (data) => {
-      setStats(data);
-    });
+    try {
+      // WebSocket connection with better configuration for Render
+      const socketUrl = API_BASE.replace('/api', '');
+      socket = io(socketUrl, {
+        auth: { token },
+        transports: ['websocket', 'polling'], // Fallback to polling if WebSocket fails
+        reconnection: true,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000,
+        timeout: 10000,
+      });
 
-    socket.on('connect_error', (err) => {
-      console.log('Admin socket connect failed:', err.message);
-    });
+      // Jab bhi backend "dashboard:update" event bheje, stats turant refresh ho jayein
+      socket.on('dashboard:update', (data) => {
+        setStats(data);
+      });
+
+      socket.on('connect_error', (err) => {
+        console.log('Admin socket connect failed, falling back to polling:', err.message);
+        // Fallback to polling if WebSocket fails
+        if (!pollingInterval) {
+          pollingInterval = setInterval(() => {
+            fetchDashboardStats();
+          }, 30000); // Poll every 30 seconds
+        }
+      });
+
+      socket.on('disconnect', () => {
+        console.log('Admin socket disconnected');
+      });
+    } catch (err) {
+      console.log('WebSocket initialization failed, using polling fallback:', err);
+      // Fallback to polling if WebSocket initialization fails
+      pollingInterval = setInterval(() => {
+        fetchDashboardStats();
+      }, 30000);
+    }
 
     // Cleanup: jab user "overview" tab se hat jaye ya component unmount ho,
     // socket connection band kar dein taake memory leak na ho
     return () => {
-      socket.disconnect();
+      if (socket) {
+        socket.disconnect();
+      }
+      if (pollingInterval) {
+        clearInterval(pollingInterval);
+      }
     };
   }, [activeTab, API_BASE, fetchDashboardStats]);
 
