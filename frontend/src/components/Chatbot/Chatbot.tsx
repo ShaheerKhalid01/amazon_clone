@@ -1,7 +1,18 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { FaComments, FaTimes, FaPaperPlane, FaSpinner } from 'react-icons/fa';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const getApiBaseUrl = () => {
+  if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
+  if (typeof window !== 'undefined') {
+    const currentOrigin = window.location.origin;
+    return currentOrigin.includes('localhost') || currentOrigin.includes('127.0.0.1')
+      ? 'http://localhost:5000/api'
+      : `${currentOrigin}/api`;
+  }
+  return 'http://localhost:5000/api';
+};
+
+const API_BASE = getApiBaseUrl();
 
 interface Message {
   role: 'user' | 'bot';
