@@ -13,7 +13,23 @@ const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 const frontendDistPath = path.resolve(__dirname, '../frontend/dist');
 const frontendIndexPath = path.join(frontendDistPath, 'index.html');
 app.use(cors({
-  origin: [FRONTEND_URL, 'http://localhost:5173', 'http://localhost:3000'],
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    // Allow localhost for development
+    if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+      return callback(null, true);
+    }
+    
+    // Allow the configured frontend URL
+    if (FRONTEND_URL && origin === FRONTEND_URL) {
+      return callback(null, true);
+    }
+    
+    // For production, allow all origins (you can restrict this to specific domains)
+    callback(null, true);
+  },
   credentials: true,
 }));
 app.use(express.json());
@@ -26,7 +42,23 @@ if (fs.existsSync(frontendDistPath)) {
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: { 
-    origin: [FRONTEND_URL, 'http://localhost:5173', 'http://localhost:3000'],
+    origin: function (origin, callback) {
+      // Allow requests with no origin
+      if (!origin) return callback(null, true);
+      
+      // Allow localhost for development
+      if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+        return callback(null, true);
+      }
+      
+      // Allow the configured frontend URL
+      if (FRONTEND_URL && origin === FRONTEND_URL) {
+        return callback(null, true);
+      }
+      
+      // For production, allow all origins
+      callback(null, true);
+    },
     credentials: true,
   },
 });
