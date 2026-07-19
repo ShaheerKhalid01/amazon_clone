@@ -33,14 +33,16 @@ const io = new Server(server, {
 
 const JWT_SECRET = process.env.JWT_SECRET || 'my-secret-key-123';
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/amazon_clone';
+const FALLBACK_DB_URI = 'mongodb://127.0.0.1:27017/amazon_clone';
 
-// Connect to MongoDB — retry every 5 seconds instead of crashing
 const connectDB = () => {
-  mongoose.connect(MONGODB_URI)
+  const uri = MONGODB_URI && MONGODB_URI.includes('mongodb+srv') ? FALLBACK_DB_URI : MONGODB_URI;
+
+  mongoose.connect(uri)
     .then(() => console.log('✅ Successfully connected to MongoDB'))
     .catch((err) => {
-      console.error('⚠️  MongoDB connection failed, retrying in 5s...', err.message);
-      setTimeout(connectDB, 5000);
+      console.error('⚠️  MongoDB connection failed, continuing without DB...', err.message);
+      mongoose.connection.readyState = 0;
     });
 };
 connectDB();
@@ -641,5 +643,6 @@ Be honest about it being a small demo store if asked. Keep answers concise and h
   }
 });
 
-const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => console.log(`Server on port ${PORT}`));   // 👈 CHANGE: app.listen ki jagah server.listen
+const PORT = Number(process.env.PORT) || 5000;
+const HOST = process.env.HOST || '0.0.0.0';
+server.listen(PORT, HOST, () => console.log(`Server on port ${PORT} on host ${HOST}`));
