@@ -8,15 +8,15 @@ export const getApiBaseUrl = () => {
   const currentOrigin = typeof window !== 'undefined' ? window.location.origin : '';
 
   if (configuredUrl) {
-    const isLocalFallback = /localhost|127\.0\.0\.1/.test(configuredUrl);
-    if (isLocalFallback && currentOrigin && !/localhost|127\.0\.0\.1/.test(currentOrigin)) {
-      return `${currentOrigin}/api`;
-    }
     return configuredUrl.endsWith('/api') ? configuredUrl : `${configuredUrl}/api`;
   }
 
   if (currentOrigin) {
-    return `${currentOrigin}/api`;
+    const isLocalHost = /localhost|127\.0\.0\.1/.test(currentOrigin);
+    if (isLocalHost) {
+      return 'http://localhost:5000/api';
+    }
+    return '/api';
   }
 
   return 'http://localhost:5000/api';
@@ -24,6 +24,7 @@ export const getApiBaseUrl = () => {
 
 export const getApiUrl = (path: string) => {
   const baseUrl = getApiBaseUrl();
-  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-  return `${baseUrl}${normalizedPath}`;
+  const normalizedBase = baseUrl.replace(/\/+$/, '');
+  const normalizedPath = path ? `/${path.replace(/^\/+/, '')}` : '';
+  return `${normalizedBase}${normalizedPath}`;
 };
