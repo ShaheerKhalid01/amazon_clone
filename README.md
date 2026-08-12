@@ -1,83 +1,87 @@
 # 🛒 Amazon Clone - Full-Stack E-Commerce Platform
 
 ![Amazon Clone](https://img.shields.io/badge/Amazon-Clone-FF9900?style=for-the-badge&logo=amazon)
-![NestJS](https://img.shields.io/badge/NestJS-E0234E?style=for-the-badge&logo=nestjs&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
+![Express.js](https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white)
+![MongoDB](https://img.shields.io/badge/MongoDB-4EA94B?style=for-the-badge&logo=mongodb&logoColor=white)
 ![React](https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
 ![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=for-the-badge&logo=tailwind-css&logoColor=white)
-![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 
-A full-featured Amazon clone built with cutting-edge technologies. Features complete e-commerce functionality including product browsing, cart management, checkout, order tracking, and more.
+A full-featured Amazon clone built with the MERN stack (MongoDB, Express, React, Node.js) and modern web technologies. Features complete e-commerce functionality including product browsing, cart management, checkout, order tracking, real-time communication, and AI integrations.
 
 ## ✨ Features
 
 ### 🛍️ Core E-Commerce
-- **Product Catalog** - Browse, search, and filter millions of products
+- **Product Catalog** - Browse, search, and filter products
 - **Shopping Cart** - Real-time cart management with quantity controls
-- **Checkout Flow** - Multi-step checkout with address and payment
+- **Checkout Flow** - Multi-step checkout process
 - **Order Management** - Track orders from placement to delivery
-- **Wishlist** - Save items for later with priority settings
 
 ### 👤 User Features
-- **Authentication** - JWT-based auth with refresh tokens
-- **User Profiles** - Manage personal information and preferences
-- **Address Book** - Multiple shipping addresses
-- **Payment Methods** - Saved credit cards and payment options
+- **Authentication** - Secure JWT-based authentication
+- **User Profiles** - Manage personal information
 - **Order History** - View and track all orders
 
 ### 🤖 Advanced Features
-- **Recommendations** - Personalized product suggestions
-- **Search** - Full-text search with auto-suggestions
-- **Reviews** - Product ratings and detailed reviews
-- **Notifications** - Email and push notifications
-- **Price Alerts** - Get notified on price drops
+- **Real-time Communication** - Powered by Socket.io for live updates
+- **AI Integration** - Enhanced features using Google Generative AI
+- **Search** - Full-text search and filtering
 
-### 👔 Seller & Admin
-- **Seller Portal** - Manage products, inventory, and sales
-- **Admin Dashboard** - User management and analytics
-- **Analytics** - Sales charts and performance metrics
+### 👔 Admin
+- **Admin Dashboard** - Manage products, users, and view analytics
 
 ## 🏗️ Tech Stack
 
 ### Backend
-- **NestJS** - Progressive Node.js framework
-- **TypeORM** - Database ORM
-- **PostgreSQL** - Primary database
-- **Redis** - Caching and session store
-- **JWT** - Authentication
-- **Swagger** - API documentation
-- **Bull** - Job queues
-- **Nodemailer** - Email sending
+- **Node.js & Express.js** - Robust REST API framework
+- **MongoDB & Mongoose** - NoSQL database and Object Data Modeling
+- **JWT (JSON Web Tokens)** - Secure authentication
+- **Socket.io** - Real-time bidirectional event-based communication
+- **Google Generative AI** - AI capabilities integration
+- **Dotenv & CORS** - Environment configuration and cross-origin resource sharing
 
 ### Frontend
-- **React 18** - UI library
-- **TypeScript** - Type safety
-- **Tailwind CSS** - Utility-first CSS
-- **Redux Toolkit** - State management
-- **React Query** - Server state
-- **React Router** - Navigation
-- **React Hook Form** - Form handling
-- **Zod** - Schema validation
-- **Chart.js** - Analytics charts
+- **React 18** - Modern UI library
+- **Vite** - Next-generation frontend tooling and bundler
+- **TypeScript** - Strongly typed programming language
+- **Tailwind CSS** - Utility-first CSS framework
+- **Redux Toolkit & React Redux** - Predictable state container
+- **React Router DOM** - Declarative routing
+- **React Hook Form & Zod** - Performant, flexible and extensible forms with schema validation
+- **Axios** - Promise based HTTP client
+- **Socket.io Client** - Real-time client features
+- **React Icons & React Hot Toast** - UI enhancements and notifications
 
-### DevOps
-- **Docker** - Containerization
-- **Docker Compose** - Multi-container orchestration
-- **Nginx** - Reverse proxy
-- **GitHub Actions** - CI/CD (coming soon)
+### DevOps & Tools
+- **Docker & Docker Compose** - Containerization for easy setup (optional)
+- **Concurrently** - Run backend and frontend simultaneously in development
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 - Node.js >= 18
 - npm >= 9
-- Docker & Docker Compose (optional)
-- PostgreSQL (if running locally)
-- Redis (if running locally)
+- MongoDB (running locally or URI for MongoDB Atlas)
 
 ### Installation
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/yourusername/amazon-clone.git
+git clone <your-repo-url>
 cd amazon-clone
+```
+
+2. **Install all dependencies (Frontend & Backend)**
+```bash
+npm run setup
+```
+
+3. **Environment Variables**
+Create `.env` files in both `frontend` and `backend` directories based on the provided `.env.example` files.
+
+4. **Run the development servers**
+```bash
+npm run dev
+```
+This will start both the backend API and frontend React app concurrently.
